@@ -29,5 +29,9 @@ with that viewer's name.
 
 CHANGELOG:
 
+v1.0.1:
+- Fixed App window bug on resolutions other than 1080p.
+- Fixed Draft alert window always showing "Draft Failed".
+
 v1.0:
 - INITIAL RELEASE

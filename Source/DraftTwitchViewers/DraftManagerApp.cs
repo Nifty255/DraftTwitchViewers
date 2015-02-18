@@ -65,6 +65,10 @@ namespace DraftTwitchViewers
         /// The message the alert is showing for.
         /// </summary>
         private string alertingMsg = "";
+        /// <summary>
+        /// Did the draft fail?
+        /// </summary>
+        private bool failedToDraft = false;
 
         /// <summary>
         /// The twitch username.
@@ -303,7 +307,7 @@ namespace DraftTwitchViewers
             float anchor = draftManagerButton.GetAnchor().x;
 
             // Adjusts the window bounds.
-            windowRect = new Rect(Mathf.Min(anchor + 1210.5f - windowWidth, 1920f - windowWidth), 40f, windowWidth, windowHeight);
+            windowRect = new Rect(Mathf.Min(anchor + 1210.5f - windowWidth, Screen.width - windowWidth), 40f, windowWidth, windowHeight);
         }
 
         /// <summary>
@@ -331,7 +335,7 @@ namespace DraftTwitchViewers
             if (alertShowing)
             {
                 // Display the window.
-                GUILayout.Window(GetInstanceID() + 1, alertRect, AlertWindow, "Draft Failed", HighLogic.Skin.window);
+                GUILayout.Window(GetInstanceID() + 1, alertRect, AlertWindow, "Twitch Draft: " + (failedToDraft ? "Failed!" : "Success!"), HighLogic.Skin.window);
             }
         }
 
@@ -724,6 +728,7 @@ namespace DraftTwitchViewers
 
                     // Alert in-game.
                     alertingMsg = thereMessage.Replace("&user", realUsername);
+                    failedToDraft = true;
                     alertShowing = true;
 
                     // Return (for coroutines).
@@ -744,6 +749,7 @@ namespace DraftTwitchViewers
 
                     // Alert in-game.
                     alertingMsg = cantMessage.Replace("&user", realUsername);
+                    failedToDraft = true;
                     alertShowing = true;
 
                     // Return (for coroutines).
@@ -769,6 +775,7 @@ namespace DraftTwitchViewers
 
             // Alert in-game.
             alertingMsg = draftMessage.Replace("&user", realUsername);
+            failedToDraft = false;
             alertShowing = true;
         }
 
