@@ -46,7 +46,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DraftManagerApp.cs" />
+    <Compile Include="DTVCamFollower.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SoundManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="README.txt" />

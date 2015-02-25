@@ -1,5 +1,5 @@
 ﻿Draft Twitch Viewers
-v1.0: Release
+v1.0.2: Release
 
 This software is provided "as-is" with no warranties.
 
@@ -17,17 +17,27 @@ This mod is in RELEASE. However, bugs can still happen. If you have a bug, or a 
 
 FEATURES:
 
-Draft Twitch Viewers (DTV) connects to twitch IRC and joins the player specified channel, and can pick a random channel user, and create a Kerbal in-game
+Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick a random user from any channel, and create a Kerbal in-game
 with that viewer's name.
 
-- Easy to use interface, with instructions for starting players/streamers.
-- Connect and disconnect, joining any channel, specified in the GUI.
-- While getting the channel viewer list, DTV can remove bots specified by the player/streamer.
+- Easy to use interface.
+- Draft from any channel, specified in the GUI.
+- While getting the channel viewer list, DTV can remove bots specified by the player/streamer and viewers with distasteful names.
 - Customize the draft message, the already drafted message, and the roster full message.
-- Upon attempted draft, a message is sent to the twitch channel and an alert is displayed in-game indicating success or failure.
+- Upon attempted draft, an alert is displayed in-game indicating success or failure.
 - Fully compatible with both Crew Manifest and Ship Manifest.
 
 CHANGELOG:
+
+v1.0.2:
+- Removed twitch login requirement.
+- Mod no longer posts to twitch chat.
+- Mod now requests a user list, parses the list, and then drafts as usual.
+- Mod now plays sounds on draft button click, draft success, and failure.
+- Added username filtering which removes vulgar usernames form the draft.
+- Right clicking the app launcher button will automatically draft a Kerbal.
+- The draft alert now shows the drafted user's skill type.
+
 
 v1.0.1:
 - Fixed App window bug on resolutions other than 1080p.
