@@ -29,6 +29,10 @@ with that viewer's name.
 
 CHANGELOG:
 
+v1.0.3:
+- Fixed weird audio panning effects.
+- Set draft audio to the game UI level.
+
 v1.0.2:
 - Removed twitch login requirement.
 - Mod no longer posts to twitch chat.

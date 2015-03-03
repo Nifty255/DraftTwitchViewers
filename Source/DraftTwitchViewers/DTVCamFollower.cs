@@ -22,7 +22,11 @@ namespace DraftTwitchViewers
         {
             try
             {
-                transform.position = Camera.main.transform.position;
+                transform.position = Camera.main.transform.position + Camera.main.transform.forward;
+                foreach(AudioSource a in transform)
+                {
+                    a.volume = GameSettings.UI_VOLUME;
+                }
             }
             catch { }
         }

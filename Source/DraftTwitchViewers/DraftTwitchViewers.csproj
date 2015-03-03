@@ -45,6 +45,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DebugWindow.cs" />
     <Compile Include="DraftManagerApp.cs" />
     <Compile Include="DTVCamFollower.cs" />
     <Compile Include="Logger.cs" />
