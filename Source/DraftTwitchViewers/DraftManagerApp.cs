@@ -10,7 +10,7 @@ namespace DraftTwitchViewers
     /// <summary>
     /// The Draft Manager App. This app is used to connect to twitch and draft users into the game as Kerbals.
     /// </summary>
-    [KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
+    [KSPAddon(KSPAddon.Startup.SpaceCentre, true)]
     public class DraftManagerApp : MonoBehaviour
     {
         #region Variables
@@ -150,7 +150,7 @@ namespace DraftTwitchViewers
             // Save this instance so others can detect it.
             instance = this;
             // If the player returns to the main menu, disconnect and destroy this isntance.
-            GameEvents.onGameSceneLoadRequested.Add((e) => { if (e == GameScenes.MAINMENU) { instance = null; Destroy(gameObject); } });
+            //GameEvents.onGameSceneLoadRequested.Add((e) => { if (e == GameScenes.MAINMENU) { instance = null; Destroy(gameObject); } });
 
             SoundManager.LoadSound("DraftTwitchViewers/Sounds/Start", "Start");
             SoundManager.LoadSound("DraftTwitchViewers/Sounds/Success", "Success");

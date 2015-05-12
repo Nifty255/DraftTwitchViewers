@@ -1,5 +1,5 @@
 ﻿Draft Twitch Viewers
-v1.0.4: Release
+v1.0.4.1: Release
 
 This software is provided "as-is" with no warranties.
 
@@ -28,6 +28,9 @@ with that viewer's name.
 - Fully compatible with both Crew Manifest and Ship Manifest.
 
 CHANGELOG:
+
+v1.0.4.1:
+- Fixed icon duplication bug.
 
 v1.0.4:
 - KSP 1.0 "Kompatibility" update ;3
