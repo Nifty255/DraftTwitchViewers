@@ -10,7 +10,7 @@ namespace DraftTwitchViewers
     /// <summary>
     /// The Draft Manager App. This app is used to connect to twitch and draft users into the game as Kerbals.
     /// </summary>
-    [KSPAddon(KSPAddon.Startup.SpaceCentre, true)]
+    [KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
     public class DraftManagerApp : MonoBehaviour
     {
         #region Variables
@@ -118,7 +118,11 @@ namespace DraftTwitchViewers
         /// <summary>
         /// The settings save location.
         /// </summary>
-        private string saveLocation = "GameData/DraftTwitchViewers/";
+        private string settingsLocation = "GameData/DraftTwitchViewers/";
+        /// <summary>
+        /// The individual game save location.
+        /// </summary>
+        private string saveLocation;
 
         /// <summary>
         /// The list of users currently in chat.
@@ -128,6 +132,10 @@ namespace DraftTwitchViewers
         /// The list of mods in chat which shouldn't be drafted.
         /// </summary>
         private List<string> botsToRemove;
+        /// <summary>
+        /// The list of users already drafted.
+        /// </summary>
+        private List<string> alreadyDrafted;
 
         #endregion
 
@@ -149,8 +157,9 @@ namespace DraftTwitchViewers
             DontDestroyOnLoad(gameObject);
             // Save this instance so others can detect it.
             instance = this;
-            // If the player returns to the main menu, disconnect and destroy this isntance.
-            //GameEvents.onGameSceneLoadRequested.Add((e) => { if (e == GameScenes.MAINMENU) { instance = null; Destroy(gameObject); } });
+
+            // Get the current game save location.
+            saveLocation = "saves/" + HighLogic.CurrentGame.Title.Substring(0, HighLogic.CurrentGame.Title.LastIndexOf(' ')) + "/";
 
             SoundManager.LoadSound("DraftTwitchViewers/Sounds/Start", "Start");
             SoundManager.LoadSound("DraftTwitchViewers/Sounds/Success", "Success");
@@ -160,7 +169,7 @@ namespace DraftTwitchViewers
             failureClip = SoundManager.CreateSound("Failure", false);
 
             // Load user settings.
-            ConfigNode userSettings = ConfigNode.Load(saveLocation + "User.cfg");
+            ConfigNode userSettings = ConfigNode.Load(settingsLocation + "User.cfg");
             // If the file exists,
             if (userSettings != null)
             {
@@ -178,7 +187,7 @@ namespace DraftTwitchViewers
             }
 
             // Load message settings.
-            ConfigNode msgSettings = ConfigNode.Load(saveLocation + "Messages.cfg");
+            ConfigNode msgSettings = ConfigNode.Load(settingsLocation + "Messages.cfg");
             // If the file exists,
             if (msgSettings != null)
             {
@@ -199,7 +208,7 @@ namespace DraftTwitchViewers
             botsToRemove = new List<string>();
 
             // Load bot settings.
-            ConfigNode botSettings = ConfigNode.Load(saveLocation + "Bots.cfg");
+            ConfigNode botSettings = ConfigNode.Load(settingsLocation + "Bots.cfg");
             // If the file exists,
             if (botSettings != null)
             {
@@ -218,6 +227,32 @@ namespace DraftTwitchViewers
                         if (c.HasValue("name")) { botsToRemove.Add(c.GetValue("name")); }
                     }
                 }
+            }
+
+            // Initialize the list.
+            alreadyDrafted = new List<string>();
+
+            // Load already drafted.
+            ConfigNode alreadyDraftedNode = ConfigNode.Load(saveLocation + "Drafted.cfg");
+            // If the file exists,
+            if (alreadyDraftedNode != null)
+            {
+                // Get the DRAFTED node.
+                alreadyDraftedNode = alreadyDraftedNode.GetNode("DRAFTED");
+
+                // If the DRAFTED node exists,
+                if (alreadyDraftedNode != null)
+                {
+                    // Get the list of USER nodes.
+                    ConfigNode[] users = alreadyDraftedNode.GetNodes("USER");
+
+                    // Iterate through and add users to the list.
+                    foreach (ConfigNode c in users)
+                    {
+                        if (c.HasValue("name")) { alreadyDrafted.Add(c.GetValue("name")); }
+                    }
+                }
+
             }
 
             // Create the App Launcher button and add it.
@@ -241,6 +276,10 @@ namespace DraftTwitchViewers
 
             // Initialize filtering regexes.
             InitRegexes();
+
+            // Set up app destroyer.
+            GameEvents.onGameSceneLoadRequested.Add(DestroyApp);
+            Logger.DebugLog("DTV App Created.");
         }
 
         /// <summary>
@@ -344,6 +383,19 @@ namespace DraftTwitchViewers
 
             // Adjusts the window bounds.
             windowRect = new Rect(Mathf.Min(anchor + 1210.5f - (windowWidth * (isCustomizing ? 2 : 1)), Screen.width - (windowWidth * (isCustomizing ? 2 : 1))), 40f, (windowWidth * (isCustomizing ? 2 : 1)), windowHeight);
+        }
+
+        /// <summary>
+        /// Destroys the app.
+        /// </summary>
+        private void DestroyApp(GameScenes data)
+        {
+            SaveAlreadyDrafted();
+            GameEvents.onGameSceneLoadRequested.Remove(DestroyApp);
+            ApplicationLauncher.Instance.RemoveModApplication(draftManagerButton);
+            instance = null;
+            Destroy(gameObject);
+            Logger.DebugLog("DTV App Destroyed.");
         }
 
         /// <summary>
@@ -518,6 +570,12 @@ namespace DraftTwitchViewers
                 usersInChat.Remove(bot);
             }
 
+            // Remove any users who were already drafted.
+            foreach(string drafted in alreadyDrafted)
+            {
+                usersInChat.Remove(drafted);
+            }
+
             // Create a new list which will be used to remove from the user list.
             List<string> toRemove = new List<string>();
 
@@ -546,7 +604,7 @@ namespace DraftTwitchViewers
             if (usersInChat.Count == 0)
             {
                 // Send a failure alert.
-                alertingMsg = "Can't draft! Empty or invalid channel.";
+                alertingMsg = "Can't draft! No more valid users.";
                 failedToDraft = true;
                 alertShowing = true;
                 failureClip.Play();
@@ -555,6 +613,8 @@ namespace DraftTwitchViewers
 
             // Gets a random user from the list.
             string userDrafted = usersInChat[UnityEngine.Random.Range(0, usersInChat.Count)];
+
+            alreadyDrafted.Add(userDrafted);
 
             // Creates a new Unity web request (WWW) using the user chosen.
             WWW getUser = new WWW("https://api.twitch.tv/kraken/users/" + userDrafted);
@@ -571,25 +631,6 @@ namespace DraftTwitchViewers
             KerbalRoster roster = HighLogic.CurrentGame.CrewRoster;
 
             draftBusy = false;
-
-            // Checks for the prior presence of the chosen user.
-            foreach (ProtoCrewMember p in roster.Crew)
-            {
-                // If the user is present in the roster,
-                if (p.name == realUsername + " Kerman")
-                {
-                    // The user is present. No need to add again.
-
-                    // Alert in-game.
-                    alertingMsg = thereMessage.Replace("&user", realUsername);
-                    failedToDraft = true;
-                    alertShowing = true;
-                    failureClip.Play();
-
-                    // Return (for coroutines).
-                    yield break;
-                }
-            }
 
             // Checks for available roster space.
             if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
@@ -642,7 +683,7 @@ namespace DraftTwitchViewers
                 ConfigNode settings = root.AddNode("USER");
                 settings.AddValue("channel", channel);
             }
-            root.Save(saveLocation + "User.cfg");
+            root.Save(settingsLocation + "User.cfg");
         }
 
         /// <summary>
@@ -655,7 +696,7 @@ namespace DraftTwitchViewers
             settings.AddValue("draftMessage", draftMessage);
             settings.AddValue("thereMessage", thereMessage);
             settings.AddValue("cantMessage", cantMessage);
-            root.Save(saveLocation + "Messages.cfg");
+            root.Save(settingsLocation + "Messages.cfg");
         }
 
         /// <summary>
@@ -670,7 +711,20 @@ namespace DraftTwitchViewers
                 ConfigNode botNode = bots.AddNode("BOT");
                 botNode.AddValue("name", bot);
             }
-            root.Save(saveLocation + "Bots.cfg");
+            root.Save(settingsLocation + "Bots.cfg");
+        }
+
+
+        private void SaveAlreadyDrafted()
+        {
+            ConfigNode root = new ConfigNode();
+            ConfigNode drafted = root.AddNode("DRAFTED");
+            foreach(string user in alreadyDrafted)
+            {
+                ConfigNode userNode = drafted.AddNode("USER");
+                userNode.AddValue("name", user);
+            }
+            root.Save(saveLocation + "Drafted.cfg");
         }
 
         #endregion

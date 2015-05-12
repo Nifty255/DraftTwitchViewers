@@ -1,5 +1,5 @@
 ﻿Draft Twitch Viewers
-v1.0.4.1: Release
+v1.0.5: Release
 
 This software is provided "as-is" with no warranties.
 
@@ -28,6 +28,10 @@ with that viewer's name.
 - Fully compatible with both Crew Manifest and Ship Manifest.
 
 CHANGELOG:
+
+v1.0.5:
+- Users already drafted are now removed before randomly drafting, skipping them completely.
+- The list of users already drafted is stored in individual files for each game save.
 
 v1.0.4.1:
 - Fixed icon duplication bug.

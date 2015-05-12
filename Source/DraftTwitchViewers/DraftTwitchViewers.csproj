@@ -32,7 +32,7 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\KSP Test Folder\1.0\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\..\KSP Test Folder\1.0.2\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -43,7 +43,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\KSP Test Folder\1.0\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\..\KSP Test Folder\1.0.2\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -67,7 +67,7 @@ copy /Y "D:\Documents\GitHub\DraftTwitchViewers\DraftTwitchViewers\README.txt" "
 
 copy /Y "$(TargetDir)$(TargetFileName)" "D:\Documents\GitHub\DraftTwitchViewers\DraftTwitchViewers\Plugins\$(TargetFileName)"
 
-xcopy "D:\Documents\GitHub\DraftTwitchViewers\DraftTwitchViewers" "D:\KSP Test Folder\1.0\GameData\DraftTwitchViewers" /S /E /Y</PostBuildEvent>
+xcopy "D:\Documents\GitHub\DraftTwitchViewers\DraftTwitchViewers" "D:\KSP Test Folder\1.0.2\GameData\DraftTwitchViewers" /S /E /Y</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
