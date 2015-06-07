@@ -1,5 +1,5 @@
 ﻿Draft Twitch Viewers
-v1.0.5: Release
+v1.1: Release
 
 This software is provided "as-is" with no warranties.
 
@@ -28,6 +28,17 @@ with that viewer's name.
 - Fully compatible with both Crew Manifest and Ship Manifest.
 
 CHANGELOG:
+
+v1.1:
+- Added "Do a Viewer Drawing" which picks a random viewer independent of the draft.
+- Viewers pulled for a drawing are stored in its own list to prevent repeat pulls.
+- Added "Empty Drawn User List" button which resets the list and allows repeat pulls.
+- Added ability to draft viewers of specific jobs.
+- Users can still draft viewers, accepting any job.
+- NOTE: Drafting for specific jobs may take longer and may fail on low-viewer channels.
+- NOTE: The default action for right clicking is to draft with any job.
+- Added fund requirement for users in career mode just like normal hiring.
+- NOTE: KSP 1.0.2 displays a false hire cost in the Astronaut Complex. DTV shows the correct amount.
 
 v1.0.5:
 - Users already drafted are now removed before randomly drafting, skipping them completely.

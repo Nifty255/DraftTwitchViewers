@@ -107,9 +107,9 @@ namespace DraftTwitchViewers
         /// </summary>
         private string draftMessage = "&user has been drafted as a &skill!";
         /// <summary>
-        /// The massage used when a user is already drafted.
+        /// The message used when a user is pulled in a drawing.
         /// </summary>
-        private string thereMessage = "&user has already been drafted.";
+        private string drawMessage = "&user has won the drawing!";
         /// <summary>
         /// The message used when the crew limit is reached.
         /// </summary>
@@ -132,6 +132,10 @@ namespace DraftTwitchViewers
         /// The list of mods in chat which shouldn't be drafted.
         /// </summary>
         private List<string> botsToRemove;
+        /// <summary>
+        /// The list of users pulled for a drawing.
+        /// </summary>
+        private List<string> drawnUsers;
         /// <summary>
         /// The list of users already drafted.
         /// </summary>
@@ -199,7 +203,7 @@ namespace DraftTwitchViewers
                 {
                     // Get the message settings.
                     if (msgSettings.HasValue("draftMessage")) { draftMessage = msgSettings.GetValue("draftMessage"); }
-                    if (msgSettings.HasValue("thereMessage")) { thereMessage = msgSettings.GetValue("thereMessage"); }
+                    if (msgSettings.HasValue("drawMessage")) { drawMessage = msgSettings.GetValue("drawMessage"); }
                     if (msgSettings.HasValue("cantMessage")) { cantMessage = msgSettings.GetValue("cantMessage"); }
                 }
             }
@@ -225,6 +229,31 @@ namespace DraftTwitchViewers
                     foreach (ConfigNode c in bots)
                     {
                         if (c.HasValue("name")) { botsToRemove.Add(c.GetValue("name")); }
+                    }
+                }
+            }
+
+            // Initialize the list.
+            drawnUsers = new List<string>();
+
+            // Load already drawn.
+            ConfigNode drawn = ConfigNode.Load(settingsLocation + "Drawing.cfg");
+            // If the file exists,
+            if (drawn != null)
+            {
+                // Get the DRAWN node.
+                drawn = drawn.GetNode("DRAWN");
+
+                // If the DRAWN node exists,
+                if (drawn != null)
+                {
+                    // Get the list of USER nodes.
+                    ConfigNode[] usrs = drawn.GetNodes("USER");
+
+                    // Iterate through and add users to the list.
+                    foreach (ConfigNode c in usrs)
+                    {
+                        if (c.HasValue("name")) { drawnUsers.Add(c.GetValue("name")); }
                     }
                 }
             }
@@ -329,7 +358,7 @@ namespace DraftTwitchViewers
                 {
                     // Else, begin the draft.
                     SaveUser();
-                    StartCoroutine(DraftIntoKrew());
+                    StartCoroutine(DraftIntoKrew(false, "Any"));
                 }
 
                 draftManagerButton.SetFalse(false);
@@ -390,7 +419,6 @@ namespace DraftTwitchViewers
         /// </summary>
         private void DestroyApp(GameScenes data)
         {
-            SaveAlreadyDrafted();
             GameEvents.onGameSceneLoadRequested.Remove(DestroyApp);
             ApplicationLauncher.Instance.RemoveModApplication(draftManagerButton);
             instance = null;
@@ -423,7 +451,7 @@ namespace DraftTwitchViewers
             if (alertShowing)
             {
                 // Display the window.
-                GUILayout.Window(GetInstanceID() + 1, alertRect, AlertWindow, "Twitch Draft: " + (failedToDraft ? "Failed!" : (draftBusy ? "Working..." : "Success!")), HighLogic.Skin.window);
+                GUILayout.Window(GetInstanceID() + 1, alertRect, AlertWindow, "DTV Alert: " + (failedToDraft ? "Failed!" : (draftBusy ? "Working..." : "Success!")), HighLogic.Skin.window);
             }
 
             Reposition();
@@ -444,8 +472,17 @@ namespace DraftTwitchViewers
             // Remember
             remember = GUILayout.Toggle(remember, "Remember Me", HighLogic.Skin.toggle);
 
-            // Draft a twitch viewer as a crewmember
-            if (GUILayout.Button("Draft a Viewer into Crew", HighLogic.Skin.button))
+            //Spacer Label
+            GUILayout.Label("", HighLogic.Skin.label);
+
+            // If career, display the cost of next draft.
+            if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
+            {
+                GUILayout.Label("Next Draft: -" + (GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount() + 1)).ToString("N0") + " Funds", HighLogic.Skin.label);
+            }
+
+            // Draft a Viewer from Twitch, skipping viewers who aren't Pilots.
+            if (GUILayout.Button("Draft a Pilot", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
                 channel = channel.ToLower();
@@ -463,12 +500,122 @@ namespace DraftTwitchViewers
                 {
                     // Else, begin the draft.
                     SaveUser();
-                    StartCoroutine(DraftIntoKrew());
+                    StartCoroutine(DraftIntoKrew(false, "Pilot"));
                 }
             }
 
-            // Customize
+            // Draft a Viewer from Twitch, skipping viewers who aren't Engineers.
+            if (GUILayout.Button("Draft an Engineer", HighLogic.Skin.button))
+            {
+                // Lowercase the channel.
+                channel = channel.ToLower();
+
+                // If the channel is empty,
+                if (channel == "")
+                {
+                    // Send a failure alert.
+                    alertingMsg = "Can't draft! Please enter a channel!";
+                    failedToDraft = true;
+                    alertShowing = true;
+                    failureClip.Play();
+                }
+                else
+                {
+                    // Else, begin the draft.
+                    SaveUser();
+                    StartCoroutine(DraftIntoKrew(false, "Engineer"));
+                }
+            }
+
+            // Draft a Viewer from Twitch, skipping viewers who aren't Scientists.
+            if (GUILayout.Button("Draft a Scientist", HighLogic.Skin.button))
+            {
+                // Lowercase the channel.
+                channel = channel.ToLower();
+
+                // If the channel is empty,
+                if (channel == "")
+                {
+                    // Send a failure alert.
+                    alertingMsg = "Can't draft! Please enter a channel!";
+                    failedToDraft = true;
+                    alertShowing = true;
+                    failureClip.Play();
+                }
+                else
+                {
+                    // Else, begin the draft.
+                    SaveUser();
+                    StartCoroutine(DraftIntoKrew(false, "Scientist"));
+                }
+            }
+
+            // Draft a Viewer from Twitch, with any job.
+            if (GUILayout.Button("Draft Any Viewer", HighLogic.Skin.button))
+            {
+                // Lowercase the channel.
+                channel = channel.ToLower();
+
+                // If the channel is empty,
+                if (channel == "")
+                {
+                    // Send a failure alert.
+                    alertingMsg = "Can't draft! Please enter a channel!";
+                    failedToDraft = true;
+                    alertShowing = true;
+                    failureClip.Play();
+                }
+                else
+                {
+                    // Else, begin the draft.
+                    SaveUser();
+                    StartCoroutine(DraftIntoKrew(false, "Any"));
+                }
+            }
+
+            //Spacer Label
             GUILayout.Label("", HighLogic.Skin.label);
+
+            // Pull a name for a drawing
+            if (GUILayout.Button("Do a Viewer Drawing", HighLogic.Skin.button))
+            {
+                // Lowercase the channel.
+                channel = channel.ToLower();
+
+                // If the channel is empty,
+                if (channel == "")
+                {
+                    // Send a failure alert.
+                    alertingMsg = "Can't do a drawing! Please enter a channel!";
+                    failedToDraft = true;
+                    alertShowing = true;
+                    failureClip.Play();
+                }
+                else
+                {
+                    // Else, begin the drawing.
+                    SaveUser();
+                    StartCoroutine(DraftIntoKrew(true, null));
+                }
+            }
+
+            GUI.enabled = (drawnUsers.Count > 0);
+
+            // Reset drawing list
+            if (GUILayout.Button((drawnUsers.Count == 0 ? "Drawn User List Empty!" : "Empty Drawn User List"), HighLogic.Skin.button))
+            {
+                // Empty the list.
+                drawnUsers = new List<string>();
+                // Save the list.
+                SaveAlreadyDrawn();
+            }
+
+            GUI.enabled = true;
+
+            //Spacer Label
+            GUILayout.Label("", HighLogic.Skin.label);
+
+            // Customize
             if (GUILayout.Button("Customize", HighLogic.Skin.button))
             {
                 isCustomizing = !isCustomizing;
@@ -479,9 +626,9 @@ namespace DraftTwitchViewers
                 GUILayout.Label("Successful Draft:", HighLogic.Skin.label);
                 draftMessage = GUILayout.TextField(draftMessage, HighLogic.Skin.textField);
 
-                // When already drafted.
-                GUILayout.Label("Already Drafted:", HighLogic.Skin.label);
-                thereMessage = GUILayout.TextField(thereMessage, HighLogic.Skin.textField);
+                // On successful draw.
+                GUILayout.Label("Successful Drawing:", HighLogic.Skin.label);
+                drawMessage = GUILayout.TextField(drawMessage, HighLogic.Skin.textField);
 
                 // If crew roster is full.
                 GUILayout.Label("Full Roster:", HighLogic.Skin.label);
@@ -543,7 +690,7 @@ namespace DraftTwitchViewers
         /// This method is called via StartCoroutine and won't block the game thread.
         /// </summary>
         /// <returns>The coroutine IEnumerator.</returns>
-        private IEnumerator DraftIntoKrew()
+        private IEnumerator DraftIntoKrew(bool forDrawing, string job)
         {
             // Shows the alert as working.
             alertShowing = true;
@@ -570,11 +717,24 @@ namespace DraftTwitchViewers
                 usersInChat.Remove(bot);
             }
 
-            // Remove any users who were already drafted.
-            foreach(string drafted in alreadyDrafted)
+            // If it's for a drawing, remove drawn users. If it's for drafting, remove drafted users.
+            if (forDrawing)
             {
-                usersInChat.Remove(drafted);
+                // Remove any users who were already drafted.
+                foreach (string drawn in drawnUsers)
+                {
+                    usersInChat.Remove(drawn);
+                }
             }
+            else
+            {
+                // Remove any users who were already drafted.
+                foreach (string drafted in alreadyDrafted)
+                {
+                    usersInChat.Remove(drafted);
+                }
+            }
+            
 
             // Create a new list which will be used to remove from the user list.
             List<string> toRemove = new List<string>();
@@ -600,76 +760,165 @@ namespace DraftTwitchViewers
                 usersInChat.Remove(r);
             }
 
-            // If the user list is empty,
-            if (usersInChat.Count == 0)
+            if (forDrawing)
             {
-                // Send a failure alert.
-                alertingMsg = "Can't draft! No more valid users.";
-                failedToDraft = true;
-                alertShowing = true;
-                failureClip.Play();
-                yield break;
-            }
-
-            // Gets a random user from the list.
-            string userDrafted = usersInChat[UnityEngine.Random.Range(0, usersInChat.Count)];
-
-            alreadyDrafted.Add(userDrafted);
-
-            // Creates a new Unity web request (WWW) using the user chosen.
-            WWW getUser = new WWW("https://api.twitch.tv/kraken/users/" + userDrafted);
-
-            // Waits for the web request to finish.
-            yield return getUser;
-
-            // Parses the real username of the chosen user.
-            string realUsername = getUser.text.Substring(getUser.text.IndexOf("\"display_name\""));
-            realUsername = realUsername.Substring(realUsername.IndexOf(":") + 2);
-            realUsername = realUsername.Substring(0, realUsername.IndexOf(",") - 1);
-
-            // Gets the roster system.
-            KerbalRoster roster = HighLogic.CurrentGame.CrewRoster;
-
-            draftBusy = false;
-
-            // Checks for available roster space.
-            if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
-            {
-                // If the roster is full,
-                if (roster.GetActiveCrewCount() >= GameVariables.Instance.GetActiveCrewLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.AstronautComplex)))
+                // If the user list is empty,
+                if (usersInChat.Count == 0)
                 {
-                    // The roster is full. Can't add another.
-
-                    // Alert in-game.
-                    alertingMsg = cantMessage.Replace("&user", realUsername);
+                    // Send a failure alert.
+                    alertingMsg = "Can't draw! No more valid users.";
                     failedToDraft = true;
                     alertShowing = true;
                     failureClip.Play();
-
-                    // Return (for coroutines).
                     yield break;
                 }
+
+                // Gets a random user from the list.
+                string userDrafted = usersInChat[UnityEngine.Random.Range(0, usersInChat.Count)];
+
+                drawnUsers.Add(userDrafted);
+
+                // Creates a new Unity web request (WWW) using the user chosen.
+                WWW getUser = new WWW("https://api.twitch.tv/kraken/users/" + userDrafted);
+
+                // Waits for the web request to finish.
+                yield return getUser;
+
+                // Parses the real username of the chosen user.
+                string realUsername = getUser.text.Substring(getUser.text.IndexOf("\"display_name\""));
+                realUsername = realUsername.Substring(realUsername.IndexOf(":") + 2);
+                realUsername = realUsername.Substring(0, realUsername.IndexOf(",") - 1);
+
+                // Alert in-game.
+                draftBusy = false;
+                alertingMsg = drawMessage.Replace("&user", realUsername);
+                failedToDraft = false;
+                alertShowing = true;
+                successClip.Play();
+                SaveAlreadyDrawn();
             }
-
-            // All checks have passed.
-
-            // Create a new Kerbal and rename.
-            ProtoCrewMember newKerbal = roster.GetNewKerbal();
-            newKerbal.name = realUsername + " Kerman";
-            KerbalRoster.SetExperienceTrait(newKerbal);
-
-            // If the game mode is not Career, set the skill level to maximum possible.
-            if (HighLogic.CurrentGame.Mode != Game.Modes.CAREER)
+            else
             {
-                newKerbal.experienceLevel = 5;
-                newKerbal.experience = 9999;
-            }
+                bool foundProperKerbal = false;
+                bool failedToFindOne = false;
+                bool notEnoughFunds = false;
+                bool rosterFull = false;
+                ProtoCrewMember newKerbal = null;
+                string realUsername = null;
 
-            // Alert in-game.
-            alertingMsg = draftMessage.Replace("&user", realUsername).Replace("&skill", newKerbal.experienceTrait.Title);
-            failedToDraft = false;
-            alertShowing = true;
-            successClip.Play();
+                do
+                {
+                    // If the user list is empty,
+                    if (usersInChat.Count == 0)
+                    {
+                        // No viewers left.
+                        failedToFindOne = true;
+                    }
+                    // Else if the game is Career and hiring would put us in the negative,
+                    else if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER && Funding.Instance.Funds - GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount() + 1) < 0)
+                    {
+                        // Don't allow the draft.
+                        notEnoughFunds = true;
+                    }
+                    // Else if the game is Career and the roster is full,
+                    else if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER && HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount() >= GameVariables.Instance.GetActiveCrewLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.AstronautComplex)))
+                    {
+                        // The roster is full. Can't add another.
+
+                        // Alert in-game.
+                        alertingMsg = cantMessage.Replace("&user", realUsername);
+                        failedToDraft = true;
+                        alertShowing = true;
+                        failureClip.Play();
+
+                        // Don't allow the draft.
+                        rosterFull = true;
+                    }
+                    else
+                    {
+                        // Gets a random user from the list.
+                        string userDrafted = usersInChat[UnityEngine.Random.Range(0, usersInChat.Count)];
+
+                        // Creates a new Unity web request (WWW) using the user chosen.
+                        WWW getUser = new WWW("https://api.twitch.tv/kraken/users/" + userDrafted);
+
+                        // Waits for the web request to finish.
+                        yield return getUser;
+
+                        // Parses the real username of the chosen user.
+                        realUsername = getUser.text.Substring(getUser.text.IndexOf("\"display_name\""));
+                        realUsername = realUsername.Substring(realUsername.IndexOf(":") + 2);
+                        realUsername = realUsername.Substring(0, realUsername.IndexOf(",") - 1);
+
+                        // All checks have passed.
+
+                        // Create a new Kerbal prototype and rename.
+                        newKerbal = CrewGenerator.RandomCrewMemberPrototype(ProtoCrewMember.KerbalType.Crew);
+                        newKerbal.name = realUsername + " Kerman";
+                        KerbalRoster.SetExperienceTrait(newKerbal);
+
+                        // Make sure the new Kerbal has the requested job. Otherwise, pull him/her out of the list and try again.
+                        if (job == "Any" || newKerbal.experienceTrait.Title == job)
+                        {
+                            // The Kerbal is of the right job, or is any job if that's what the drafter wants. Actually create him this time.
+                            newKerbal = HighLogic.CurrentGame.CrewRoster.GetNewKerbal();
+                            newKerbal.name = realUsername + " Kerman";
+                            KerbalRoster.SetExperienceTrait(newKerbal);
+
+                            // If the game is career, we should subtract the cost of hiring.
+                            if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
+                            {
+                                Funding.Instance.AddFunds(-(double)GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount()), TransactionReasons.CrewRecruited);
+                            }
+
+                            // We found a proper Kerbal, so we canadd him to the Already Drafted list and exit the loop.
+                            alreadyDrafted.Add(userDrafted);
+                            foundProperKerbal = true;
+                        }
+                        else
+                        {
+                            // The Kerbal isn't of the right job. Remove them from the list and go again.
+                            usersInChat.Remove(userDrafted);
+                        }
+                    }
+                }
+                while (!foundProperKerbal && !failedToFindOne && !notEnoughFunds && !rosterFull);
+
+                // If we found a Kerbal with the right job,
+                if (foundProperKerbal)
+                {
+                    // If the game mode is not Career, set the skill level to maximum possible.
+                    if (HighLogic.CurrentGame.Mode != Game.Modes.CAREER)
+                    {
+                        newKerbal.experienceLevel = 5;
+                        newKerbal.experience = 9999;
+                    }
+
+                    // Alert in-game.
+                    draftBusy = false;
+                    alertingMsg = draftMessage.Replace("&user", realUsername).Replace("&skill", newKerbal.experienceTrait.Title);
+                    failedToDraft = false;
+                    alertShowing = true;
+                    successClip.Play();
+                    SaveAlreadyDrafted();
+                }
+                else if (failedToFindOne)
+                {
+                    // Send a failure alert.
+                    alertingMsg = "Can't draft! No more valid users.";
+                    failedToDraft = true;
+                    alertShowing = true;
+                    failureClip.Play();
+                }
+                else if (notEnoughFunds)
+                {
+                    // Send a failure alert.
+                    alertingMsg = "Can't draft! Not enough Funds.";
+                    failedToDraft = true;
+                    alertShowing = true;
+                    failureClip.Play();
+                }
+            }
         }
 
         /// <summary>
@@ -694,7 +943,7 @@ namespace DraftTwitchViewers
             ConfigNode root = new ConfigNode();
             ConfigNode settings = root.AddNode("SETTNGS");
             settings.AddValue("draftMessage", draftMessage);
-            settings.AddValue("thereMessage", thereMessage);
+            settings.AddValue("drawMessage", drawMessage);
             settings.AddValue("cantMessage", cantMessage);
             root.Save(settingsLocation + "Messages.cfg");
         }
@@ -714,7 +963,24 @@ namespace DraftTwitchViewers
             root.Save(settingsLocation + "Bots.cfg");
         }
 
+        /// <summary>
+        /// Saves the list of users who have already been pulled for a drawing.
+        /// </summary>
+        private void SaveAlreadyDrawn()
+        {
+            ConfigNode root = new ConfigNode();
+            ConfigNode drawn = root.AddNode("DRAWN");
+            foreach (string user in drawnUsers)
+            {
+                ConfigNode userNode = drawn.AddNode("USER");
+                userNode.AddValue("name", user);
+            }
+            root.Save(settingsLocation + "Drawing.cfg");
+        }
 
+        /// <summary>
+        /// Saves the list of users who have already been drafted in this game save.
+        /// </summary>
         private void SaveAlreadyDrafted()
         {
             ConfigNode root = new ConfigNode();
