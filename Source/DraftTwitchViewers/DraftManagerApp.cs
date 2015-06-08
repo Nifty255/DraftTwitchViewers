@@ -103,6 +103,10 @@ namespace DraftTwitchViewers
         /// </summary>
         private bool remember = false;
         /// <summary>
+        /// Add "Kerman" to every name?
+        /// </summary>
+        private bool addKerman = true;
+        /// <summary>
         /// The message used when a draft succeeds.
         /// </summary>
         private string draftMessage = "&user has been drafted as a &skill!";
@@ -622,6 +626,9 @@ namespace DraftTwitchViewers
             }
             if (isCustomizing)
             {
+                // Add "Kerman" toggle.
+                addKerman = GUILayout.Toggle(addKerman, "Add \"Kerman\" to names", HighLogic.Skin.toggle);
+
                 // On successful draft.
                 GUILayout.Label("Successful Draft:", HighLogic.Skin.label);
                 draftMessage = GUILayout.TextField(draftMessage, HighLogic.Skin.textField);
@@ -854,7 +861,7 @@ namespace DraftTwitchViewers
 
                         // Create a new Kerbal prototype and rename.
                         newKerbal = CrewGenerator.RandomCrewMemberPrototype(ProtoCrewMember.KerbalType.Crew);
-                        newKerbal.name = realUsername + " Kerman";
+                        newKerbal.name = realUsername + (addKerman ? " Kerman" : "");
                         KerbalRoster.SetExperienceTrait(newKerbal);
 
                         // Make sure the new Kerbal has the requested job. Otherwise, pull him/her out of the list and try again.
@@ -862,7 +869,7 @@ namespace DraftTwitchViewers
                         {
                             // The Kerbal is of the right job, or is any job if that's what the drafter wants. Actually create him this time.
                             newKerbal = HighLogic.CurrentGame.CrewRoster.GetNewKerbal();
-                            newKerbal.name = realUsername + " Kerman";
+                            newKerbal.name = realUsername + (addKerman ? " Kerman" : "");
                             KerbalRoster.SetExperienceTrait(newKerbal);
 
                             // If the game is career, we should subtract the cost of hiring.
@@ -945,6 +952,7 @@ namespace DraftTwitchViewers
             settings.AddValue("draftMessage", draftMessage);
             settings.AddValue("drawMessage", drawMessage);
             settings.AddValue("cantMessage", cantMessage);
+            settings.AddValue("addKerman", addKerman);
             root.Save(settingsLocation + "Messages.cfg");
         }
 

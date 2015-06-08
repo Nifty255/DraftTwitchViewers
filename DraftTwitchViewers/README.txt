@@ -1,5 +1,5 @@
 ﻿Draft Twitch Viewers
-v1.1: Release
+v1.1.1: Release
 
 This software is provided "as-is" with no warranties.
 
@@ -28,6 +28,9 @@ with that viewer's name.
 - Fully compatible with both Crew Manifest and Ship Manifest.
 
 CHANGELOG:
+
+v1.1.1:
+- Added toggle for adding "Kerman" to the end of Kerbal names.
 
 v1.1:
 - Added "Do a Viewer Drawing" which picks a random viewer independent of the draft.
