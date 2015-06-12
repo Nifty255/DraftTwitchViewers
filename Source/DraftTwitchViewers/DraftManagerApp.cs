@@ -209,6 +209,7 @@ namespace DraftTwitchViewers
                     if (msgSettings.HasValue("draftMessage")) { draftMessage = msgSettings.GetValue("draftMessage"); }
                     if (msgSettings.HasValue("drawMessage")) { drawMessage = msgSettings.GetValue("drawMessage"); }
                     if (msgSettings.HasValue("cantMessage")) { cantMessage = msgSettings.GetValue("cantMessage"); }
+                    if (msgSettings.HasValue("addKerman")) { addKerman = bool.Parse(msgSettings.GetValue("addKerman")); }
                 }
             }
 
@@ -948,7 +949,7 @@ namespace DraftTwitchViewers
         private void SaveMessages()
         {
             ConfigNode root = new ConfigNode();
-            ConfigNode settings = root.AddNode("SETTNGS");
+            ConfigNode settings = root.AddNode("SETTINGS");
             settings.AddValue("draftMessage", draftMessage);
             settings.AddValue("drawMessage", drawMessage);
             settings.AddValue("cantMessage", cantMessage);
