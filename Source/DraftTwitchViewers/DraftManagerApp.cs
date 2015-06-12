@@ -663,6 +663,9 @@ namespace DraftTwitchViewers
                 }
             }
 
+            //Version Label
+            GUILayout.Label("Version " + (typeof(DraftManagerApp).Assembly.GetName().Version.ToString()), HighLogic.Skin.label);
+
             GUILayout.EndVertical();
         }
 

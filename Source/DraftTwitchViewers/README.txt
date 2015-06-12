@@ -1,5 +1,5 @@
 ﻿Draft Twitch Viewers
-v1.1.1.1: Release
+v1.1.2: Release
 
 This software is provided "as-is" with no warranties.
 
@@ -28,6 +28,9 @@ with that viewer's name.
 - Fully compatible with both Crew Manifest and Ship Manifest.
 
 CHANGELOG:
+
+v1.1.2:
+- Added version label to the bottom of the App window.
 
 v1.1.1.1:
 - Fixed "Kerman" toggle and custom messages not loading from file.
