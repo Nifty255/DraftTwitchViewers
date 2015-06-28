@@ -424,11 +424,14 @@ namespace DraftTwitchViewers
         /// </summary>
         private void DestroyApp(GameScenes data)
         {
-            GameEvents.onGameSceneLoadRequested.Remove(DestroyApp);
-            ApplicationLauncher.Instance.RemoveModApplication(draftManagerButton);
-            instance = null;
-            Destroy(gameObject);
-            Logger.DebugLog("DTV App Destroyed.");
+            if (data == GameScenes.MAINMENU)
+            {
+                GameEvents.onGameSceneLoadRequested.Remove(DestroyApp);
+                ApplicationLauncher.Instance.RemoveModApplication(draftManagerButton);
+                instance = null;
+                Destroy(gameObject);
+                Logger.DebugLog("DTV App Destroyed.");
+            }
         }
 
         /// <summary>

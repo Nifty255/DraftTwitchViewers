@@ -67,7 +67,7 @@ copy /Y "D:\Documents\GitHub\DraftTwitchViewers\DraftTwitchViewers\README.txt" "
 
 copy /Y "$(TargetDir)$(TargetFileName)" "D:\Documents\GitHub\DraftTwitchViewers\DraftTwitchViewers\Plugins\$(TargetFileName)"
 
-xcopy "D:\Documents\GitHub\DraftTwitchViewers\DraftTwitchViewers" "D:\KSP Test Folder\1.0.2\GameData\DraftTwitchViewers" /S /E /Y</PostBuildEvent>
+xcopy "D:\Documents\GitHub\DraftTwitchViewers\DraftTwitchViewers" "D:\KSP Test Folder\1.0.3\GameData\DraftTwitchViewers" /S /E /Y</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

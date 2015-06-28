@@ -29,6 +29,9 @@ with that viewer's name.
 
 CHANGELOG:
 
+v1.1.3:
+- Fixed bug which prevented the DTV App from appearing in the flight scene.
+
 v1.1.2:
 - Added version label to the bottom of the App window.
 
