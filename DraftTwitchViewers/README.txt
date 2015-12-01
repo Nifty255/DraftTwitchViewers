@@ -29,6 +29,11 @@ with that viewer's name.
 
 CHANGELOG:
 
+v1.1.4:
+- Added ability to add drafted Kerbals directly into the craft.
+- The option to add directly into crafts is togglable in the Customize menu.
+- Kerbals can be added into any part with available seating, simply by clicking it.
+
 v1.1.3:
 - Fixed bug which prevented the DTV App from appearing in the flight scene.
 

@@ -107,6 +107,10 @@ namespace DraftTwitchViewers
         /// </summary>
         private bool addKerman = true;
         /// <summary>
+        /// Add the kerbal to the current craft when drafted?
+        /// </summary>
+        private bool addToCraft = false;
+        /// <summary>
         /// The message used when a draft succeeds.
         /// </summary>
         private string draftMessage = "&user has been drafted as a &skill!";
@@ -210,6 +214,7 @@ namespace DraftTwitchViewers
                     if (msgSettings.HasValue("drawMessage")) { drawMessage = msgSettings.GetValue("drawMessage"); }
                     if (msgSettings.HasValue("cantMessage")) { cantMessage = msgSettings.GetValue("cantMessage"); }
                     if (msgSettings.HasValue("addKerman")) { addKerman = bool.Parse(msgSettings.GetValue("addKerman")); }
+                    if (msgSettings.HasValue("addToCraft")) { addToCraft = bool.Parse(msgSettings.GetValue("addToCraft")); }
                 }
             }
 
@@ -633,6 +638,9 @@ namespace DraftTwitchViewers
                 // Add "Kerman" toggle.
                 addKerman = GUILayout.Toggle(addKerman, "Add \"Kerman\" to names", HighLogic.Skin.toggle);
 
+                // Add drafted to craft toggle.
+                addToCraft = GUILayout.Toggle(addToCraft, "Add drafted Kerbals to craft (Preflight Only)", HighLogic.Skin.toggle);
+
                 // On successful draft.
                 GUILayout.Label("Successful Draft:", HighLogic.Skin.label);
                 draftMessage = GUILayout.TextField(draftMessage, HighLogic.Skin.textField);
@@ -885,9 +893,15 @@ namespace DraftTwitchViewers
                                 Funding.Instance.AddFunds(-(double)GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount()), TransactionReasons.CrewRecruited);
                             }
 
-                            // We found a proper Kerbal, so we canadd him to the Already Drafted list and exit the loop.
+                            // We found a proper Kerbal, so we can add him to the Already Drafted list and exit the loop.
                             alreadyDrafted.Add(userDrafted);
                             foundProperKerbal = true;
+
+                            // If the game is Preflight and the user wants to automatically add to the craft,
+                            if (IsPreflight && addToCraft)
+                            {
+                                PartSelectionManager.Instance.GenerateSelection(newKerbal);
+                            }
                         }
                         else
                         {
@@ -960,6 +974,7 @@ namespace DraftTwitchViewers
             settings.AddValue("drawMessage", drawMessage);
             settings.AddValue("cantMessage", cantMessage);
             settings.AddValue("addKerman", addKerman);
+            settings.AddValue("addToCraft", addToCraft);
             root.Save(settingsLocation + "Messages.cfg");
         }
 
@@ -1037,6 +1052,23 @@ namespace DraftTwitchViewers
             }
 
             return toRet;
+        }
+
+        /// <summary>
+        /// Determines if the game is currently in Preflight status (The loaded scene is Flight and the active vessel is on the LaunchPad or Runway).
+        /// </summary>
+        /// <returns>True if the game is currently in Preflight status.</returns>
+        bool IsPreflight
+        {
+            get
+            {
+                if (HighLogic.LoadedSceneIsFlight)
+                {
+                    return FlightGlobals.ActiveVessel.landedAt == "KSC_LaunchPad_Platform" || FlightGlobals.ActiveVessel.landedAt == "Runway";
+                }
+
+                return false;
+            }
         }
 
         #endregion
