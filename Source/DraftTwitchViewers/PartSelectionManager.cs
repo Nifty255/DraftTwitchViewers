@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace DraftTwitchViewers
@@ -13,7 +9,9 @@ namespace DraftTwitchViewers
     [KSPAddon(KSPAddon.Startup.Flight, true)]
     class PartSelectionManager : MonoBehaviour
     {
-         /// <summary>
+        #region Variables
+
+        /// <summary>
         /// The upper ScreenMessage template.
         /// </summary>
         ScreenMessage upper;
@@ -33,6 +31,8 @@ namespace DraftTwitchViewers
         /// </summary>
         private List<PartSelector> selectors;
 
+        #region Instance
+
         /// <summary>
         /// The private instance field.
         /// </summary>
@@ -45,6 +45,12 @@ namespace DraftTwitchViewers
         {
             get { return instance; }
         }
+
+        #endregion
+
+        #endregion
+
+        #region Unity Functions
 
         /// <summary>
         /// Called when the MonoBehavior is awakened.
@@ -73,6 +79,10 @@ namespace DraftTwitchViewers
             }
         }
 
+        #endregion
+
+        #region KSP Functions
+
         /// <summary>
         /// Generates a set of PartSelectors and allows the user to click a part to add the crew.
         /// </summary>
@@ -80,7 +90,7 @@ namespace DraftTwitchViewers
         public void GenerateSelection(ProtoCrewMember member)
         {
             // Show upper selection message.
-            ScreenMessages.PostScreenMessage("<color=" + TwitchPurple.Hex + ">Select a pod for " + member.name + "(" + member.experienceTrait.Title + ").</color>", upper);
+            ScreenMessages.PostScreenMessage("<color=" + TwitchPurple.Hex + ">Select a pod for " + member.name + " (" + member.experienceTrait.Title + ").</color>", upper);
 
             // Lock the the inputs to prevent launch and other shenanigans.
             InputLockManager.SetControlLock(ControlTypes.ALLBUTCAMERAS, "DTVAddCrew");
@@ -179,7 +189,11 @@ namespace DraftTwitchViewers
             // Unlock controls.
             InputLockManager.RemoveControlLock("DTVAddCrew");
         }
+
+        #endregion
     }
+
+    #region Twitch Purple
 
     /// <summary>
     /// The Twitch Purple color. Provides access to both standard RGB and Hexadecimal formats.
@@ -202,4 +216,6 @@ namespace DraftTwitchViewers
             get { return "#6c2498"; }
         }
     }
+
+    #endregion
 }

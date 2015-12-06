@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace DraftTwitchViewers
@@ -19,6 +17,8 @@ namespace DraftTwitchViewers
         /// The instance of this object.
         /// </summary>
         private static DraftManagerApp instance;
+
+        #region UI Management
 
         /// <summary>
         /// The App Launcher Button
@@ -59,11 +59,11 @@ namespace DraftTwitchViewers
         /// <summary>
         /// The width of the window.
         /// </summary>
-        private float windowWidth = 250;
+        private float windowWidth = 350;
         /// <summary>
         /// The height of the window.
         /// </summary>
-        private float windowHeight = 200f;
+        private float windowHeight = 250f;
         /// <summary>
         /// Is the draft failure alert showing?
         /// </summary>
@@ -81,6 +81,10 @@ namespace DraftTwitchViewers
         /// </summary>
         private bool draftBusy = false;
 
+        #endregion
+
+        #region Audio
+
         /// <summary>
         /// The AudioSource played when a draft is started.
         /// </summary>
@@ -94,18 +98,10 @@ namespace DraftTwitchViewers
         /// </summary>
         private AudioSource failureClip;
 
-        /// <summary>
-        /// The twitch channel.
-        /// </summary>
-        private string channel = "";
-        /// <summary>
-        /// Remember the channel?
-        /// </summary>
-        private bool remember = false;
-        /// <summary>
-        /// Add "Kerman" to every name?
-        /// </summary>
-        private bool addKerman = true;
+        #endregion
+
+        #region Settings
+
         /// <summary>
         /// Add the kerbal to the current craft when drafted?
         /// </summary>
@@ -118,36 +114,17 @@ namespace DraftTwitchViewers
         /// The message used when a user is pulled in a drawing.
         /// </summary>
         private string drawMessage = "&user has won the drawing!";
-        /// <summary>
-        /// The message used when the crew limit is reached.
-        /// </summary>
-        private string cantMessage = "&user can't be drafted. Crew limit reached!";
+
+        #endregion
+
+        #region Misc Variables
 
         /// <summary>
         /// The settings save location.
         /// </summary>
         private string settingsLocation = "GameData/DraftTwitchViewers/";
-        /// <summary>
-        /// The individual game save location.
-        /// </summary>
-        private string saveLocation;
 
-        /// <summary>
-        /// The list of users currently in chat.
-        /// </summary>
-        private List<string> usersInChat;
-        /// <summary>
-        /// The list of mods in chat which shouldn't be drafted.
-        /// </summary>
-        private List<string> botsToRemove;
-        /// <summary>
-        /// The list of users pulled for a drawing.
-        /// </summary>
-        private List<string> drawnUsers;
-        /// <summary>
-        /// The list of users already drafted.
-        /// </summary>
-        private List<string> alreadyDrafted;
+        #endregion
 
         #endregion
 
@@ -170,9 +147,6 @@ namespace DraftTwitchViewers
             // Save this instance so others can detect it.
             instance = this;
 
-            // Get the current game save location.
-            saveLocation = "saves/" + HighLogic.CurrentGame.Title.Substring(0, HighLogic.CurrentGame.Title.LastIndexOf(' ')) + "/";
-
             SoundManager.LoadSound("DraftTwitchViewers/Sounds/Start", "Start");
             SoundManager.LoadSound("DraftTwitchViewers/Sounds/Success", "Success");
             SoundManager.LoadSound("DraftTwitchViewers/Sounds/Failure", "Failure");
@@ -180,118 +154,53 @@ namespace DraftTwitchViewers
             successClip = SoundManager.CreateSound("Success", false);
             failureClip = SoundManager.CreateSound("Failure", false);
 
-            // Load user settings.
-            ConfigNode userSettings = ConfigNode.Load(settingsLocation + "User.cfg");
+            // Load global settings.
+            ConfigNode globalSettings = ConfigNode.Load(settingsLocation + "GlobalSettings.cfg");
             // If the file exists,
-            if (userSettings != null)
+            if (globalSettings != null)
             {
-                // Get the USER node.
-                userSettings = userSettings.GetNode("USER");
+                #region Draft Settings Load
+                // Get the DRAFT node.
+                ConfigNode draftSettings = globalSettings.GetNode("DRAFT");
 
-                // If the USER node exists,
-                if (userSettings != null)
+                // If the DRAFT node exists,
+                if (draftSettings != null)
                 {
-                    // Get the user settings.
-                    if (userSettings.HasValue("channel")) { channel = userSettings.GetValue("channel"); }
-                    // These settings were remembered, so it should remember again.
-                    remember = true;
+                    // Get the global settings.
+                    if (draftSettings.HasValue("addToCraft")) { try { addToCraft = bool.Parse(draftSettings.GetValue("addToCraft")); } catch { } }
                 }
+                // If the DRAFT node doesn't exist,
+                else
+                {
+                    // Log a warning that is wasn't found.
+                    Logger.DebugWarning("GlobalSettings.cfg WAS found, but the DRAFT node was not. Using defaults.");
+                }
+                #endregion
+
+                #region Message Settings Load
+                // Get the MESSAGES node.
+                ConfigNode messageSettings = globalSettings.GetNode("MESSAGES");
+
+                // If the MESSAGES node exists,
+                if (messageSettings != null)
+                {
+                    // Get the global settings.
+                    if (messageSettings.HasValue("draftMessage")) { draftMessage = messageSettings.GetValue("draftMessage"); }
+                    if (messageSettings.HasValue("drawMessage")) { drawMessage = messageSettings.GetValue("drawMessage"); }
+                }
+                // If the DRAFT node doesn't exist,
+                else
+                {
+                    // Log a warning that is wasn't found.
+                    Logger.DebugWarning("GlobalSettings.cfg WAS found, but the MESSAGES node was not. Using defaults.");
+                }
+                #endregion
             }
-
-            // Load message settings.
-            ConfigNode msgSettings = ConfigNode.Load(settingsLocation + "Messages.cfg");
-            // If the file exists,
-            if (msgSettings != null)
+            // If the file doesn't exist,
+            else
             {
-                // Get the SETTINGS node.
-                msgSettings = msgSettings.GetNode("SETTINGS");
-
-                // If the SETTINGS node exists,
-                if (msgSettings != null)
-                {
-                    // Get the message settings.
-                    if (msgSettings.HasValue("draftMessage")) { draftMessage = msgSettings.GetValue("draftMessage"); }
-                    if (msgSettings.HasValue("drawMessage")) { drawMessage = msgSettings.GetValue("drawMessage"); }
-                    if (msgSettings.HasValue("cantMessage")) { cantMessage = msgSettings.GetValue("cantMessage"); }
-                    if (msgSettings.HasValue("addKerman")) { addKerman = bool.Parse(msgSettings.GetValue("addKerman")); }
-                    if (msgSettings.HasValue("addToCraft")) { addToCraft = bool.Parse(msgSettings.GetValue("addToCraft")); }
-                }
-            }
-
-            // Initialize the list.
-            botsToRemove = new List<string>();
-
-            // Load bot settings.
-            ConfigNode botSettings = ConfigNode.Load(settingsLocation + "Bots.cfg");
-            // If the file exists,
-            if (botSettings != null)
-            {
-                // Get the BOTS node.
-                botSettings = botSettings.GetNode("BOTS");
-
-                // If the BOTS node exists,
-                if (botSettings != null)
-                {
-                    // Get the list of BOT nodes.
-                    ConfigNode[] bots = botSettings.GetNodes("BOT");
-
-                    // Iterate through and add bots to the list.
-                    foreach (ConfigNode c in bots)
-                    {
-                        if (c.HasValue("name")) { botsToRemove.Add(c.GetValue("name")); }
-                    }
-                }
-            }
-
-            // Initialize the list.
-            drawnUsers = new List<string>();
-
-            // Load already drawn.
-            ConfigNode drawn = ConfigNode.Load(settingsLocation + "Drawing.cfg");
-            // If the file exists,
-            if (drawn != null)
-            {
-                // Get the DRAWN node.
-                drawn = drawn.GetNode("DRAWN");
-
-                // If the DRAWN node exists,
-                if (drawn != null)
-                {
-                    // Get the list of USER nodes.
-                    ConfigNode[] usrs = drawn.GetNodes("USER");
-
-                    // Iterate through and add users to the list.
-                    foreach (ConfigNode c in usrs)
-                    {
-                        if (c.HasValue("name")) { drawnUsers.Add(c.GetValue("name")); }
-                    }
-                }
-            }
-
-            // Initialize the list.
-            alreadyDrafted = new List<string>();
-
-            // Load already drafted.
-            ConfigNode alreadyDraftedNode = ConfigNode.Load(saveLocation + "Drafted.cfg");
-            // If the file exists,
-            if (alreadyDraftedNode != null)
-            {
-                // Get the DRAFTED node.
-                alreadyDraftedNode = alreadyDraftedNode.GetNode("DRAFTED");
-
-                // If the DRAFTED node exists,
-                if (alreadyDraftedNode != null)
-                {
-                    // Get the list of USER nodes.
-                    ConfigNode[] users = alreadyDraftedNode.GetNodes("USER");
-
-                    // Iterate through and add users to the list.
-                    foreach (ConfigNode c in users)
-                    {
-                        if (c.HasValue("name")) { alreadyDrafted.Add(c.GetValue("name")); }
-                    }
-                }
-
+                // Log a warning that it wasn't found.
+                Logger.DebugWarning("GlobalSettings.cfg wasn't found. Using defaults.");
             }
 
             // Create the App Launcher button and add it.
@@ -312,9 +221,6 @@ namespace DraftTwitchViewers
             windowRect = new Rect(Screen.width - windowWidth, 40f, windowWidth, windowHeight);
             // Set up the alert bounds.
             alertRect = new Rect(Screen.width / 2 - windowWidth / 2, Screen.height / 2 - windowHeight / 4, windowWidth, 1f);
-
-            // Initialize filtering regexes.
-            InitRegexes();
 
             // Set up app destroyer.
             GameEvents.onGameSceneLoadRequested.Add(DestroyApp);
@@ -353,23 +259,10 @@ namespace DraftTwitchViewers
             if (rightClickFound)
             {
                 // Lowercase the channel.
-                channel = channel.ToLower();
+                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
 
-                // If the channel is empty,
-                if (channel == "")
-                {
-                    // Send a failure alert.
-                    alertingMsg = "Can't draft! Please enter a channel!";
-                    failedToDraft = true;
-                    alertShowing = true;
-                    failureClip.Play();
-                }
-                else
-                {
-                    // Else, begin the draft.
-                    SaveUser();
-                    StartCoroutine(DraftIntoKrew(false, "Any"));
-                }
+                // Perform the draft.
+                DoDraft(false);
 
                 draftManagerButton.SetFalse(false);
             }
@@ -480,10 +373,7 @@ namespace DraftTwitchViewers
 
             // Channel
             GUILayout.Label("Channel (Lowercase):", HighLogic.Skin.label);
-            channel = GUILayout.TextField(channel, HighLogic.Skin.textField);
-
-            // Remember
-            remember = GUILayout.Toggle(remember, "Remember Me", HighLogic.Skin.toggle);
+            DraftManager.Instance.Channel = GUILayout.TextField(DraftManager.Instance.Channel, HighLogic.Skin.textField);
 
             //Spacer Label
             GUILayout.Label("", HighLogic.Skin.label);
@@ -498,92 +388,40 @@ namespace DraftTwitchViewers
             if (GUILayout.Button("Draft a Pilot", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                channel = channel.ToLower();
+                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
 
-                // If the channel is empty,
-                if (channel == "")
-                {
-                    // Send a failure alert.
-                    alertingMsg = "Can't draft! Please enter a channel!";
-                    failedToDraft = true;
-                    alertShowing = true;
-                    failureClip.Play();
-                }
-                else
-                {
-                    // Else, begin the draft.
-                    SaveUser();
-                    StartCoroutine(DraftIntoKrew(false, "Pilot"));
-                }
+                // Perform the draft.
+                DoDraft(false, "Pilot");
             }
 
             // Draft a Viewer from Twitch, skipping viewers who aren't Engineers.
             if (GUILayout.Button("Draft an Engineer", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                channel = channel.ToLower();
+                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
 
-                // If the channel is empty,
-                if (channel == "")
-                {
-                    // Send a failure alert.
-                    alertingMsg = "Can't draft! Please enter a channel!";
-                    failedToDraft = true;
-                    alertShowing = true;
-                    failureClip.Play();
-                }
-                else
-                {
-                    // Else, begin the draft.
-                    SaveUser();
-                    StartCoroutine(DraftIntoKrew(false, "Engineer"));
-                }
+                // Perform the draft.
+                DoDraft(false, "Engineer");
             }
 
             // Draft a Viewer from Twitch, skipping viewers who aren't Scientists.
             if (GUILayout.Button("Draft a Scientist", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                channel = channel.ToLower();
+                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
 
-                // If the channel is empty,
-                if (channel == "")
-                {
-                    // Send a failure alert.
-                    alertingMsg = "Can't draft! Please enter a channel!";
-                    failedToDraft = true;
-                    alertShowing = true;
-                    failureClip.Play();
-                }
-                else
-                {
-                    // Else, begin the draft.
-                    SaveUser();
-                    StartCoroutine(DraftIntoKrew(false, "Scientist"));
-                }
+                // Perform the draft.
+                DoDraft(false, "Scientist");
             }
 
             // Draft a Viewer from Twitch, with any job.
             if (GUILayout.Button("Draft Any Viewer", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                channel = channel.ToLower();
+                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
 
-                // If the channel is empty,
-                if (channel == "")
-                {
-                    // Send a failure alert.
-                    alertingMsg = "Can't draft! Please enter a channel!";
-                    failedToDraft = true;
-                    alertShowing = true;
-                    failureClip.Play();
-                }
-                else
-                {
-                    // Else, begin the draft.
-                    SaveUser();
-                    StartCoroutine(DraftIntoKrew(false, "Any"));
-                }
+                // Perform the draft.
+                DoDraft(false);
             }
 
             //Spacer Label
@@ -593,34 +431,21 @@ namespace DraftTwitchViewers
             if (GUILayout.Button("Do a Viewer Drawing", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                channel = channel.ToLower();
+                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
 
-                // If the channel is empty,
-                if (channel == "")
-                {
-                    // Send a failure alert.
-                    alertingMsg = "Can't do a drawing! Please enter a channel!";
-                    failedToDraft = true;
-                    alertShowing = true;
-                    failureClip.Play();
-                }
-                else
-                {
-                    // Else, begin the drawing.
-                    SaveUser();
-                    StartCoroutine(DraftIntoKrew(true, null));
-                }
+                // Perform the draft.
+                DoDraft(true);
             }
 
-            GUI.enabled = (drawnUsers.Count > 0);
+            GUI.enabled = (DraftManager.Instance.DrawnUsers.Count > 0);
 
             // Reset drawing list
-            if (GUILayout.Button((drawnUsers.Count == 0 ? "Drawn User List Empty!" : "Empty Drawn User List"), HighLogic.Skin.button))
+            if (GUILayout.Button((DraftManager.Instance.DrawnUsers.Count == 0 ? "Drawn User List Empty!" : "Empty Drawn User List"), HighLogic.Skin.button))
             {
                 // Empty the list.
-                drawnUsers = new List<string>();
+                DraftManager.Instance.DrawnUsers = new List<string>();
                 // Save the list.
-                SaveAlreadyDrawn();
+                DraftManager.Instance.SaveDrawn();
             }
 
             GUI.enabled = true;
@@ -636,7 +461,7 @@ namespace DraftTwitchViewers
             if (isCustomizing)
             {
                 // Add "Kerman" toggle.
-                addKerman = GUILayout.Toggle(addKerman, "Add \"Kerman\" to names", HighLogic.Skin.toggle);
+                DraftManager.Instance.AddKerman = GUILayout.Toggle(DraftManager.Instance.AddKerman, "Add \"Kerman\" to names", HighLogic.Skin.toggle);
 
                 // Add drafted to craft toggle.
                 addToCraft = GUILayout.Toggle(addToCraft, "Add drafted Kerbals to craft (Preflight Only)", HighLogic.Skin.toggle);
@@ -649,10 +474,6 @@ namespace DraftTwitchViewers
                 GUILayout.Label("Successful Drawing:", HighLogic.Skin.label);
                 drawMessage = GUILayout.TextField(drawMessage, HighLogic.Skin.textField);
 
-                // If crew roster is full.
-                GUILayout.Label("Full Roster:", HighLogic.Skin.label);
-                cantMessage = GUILayout.TextField(cantMessage, HighLogic.Skin.textField);
-
                 // $user Explanation
                 GUILayout.Label("", HighLogic.Skin.label);
                 GUILayout.Label("\"&user\" = The user drafted.", HighLogic.Skin.label);
@@ -661,16 +482,16 @@ namespace DraftTwitchViewers
                 // Bots to remove
                 GUILayout.Label("", HighLogic.Skin.label);
                 GUILayout.Label("Bots to Remove (One per line, no commas):", HighLogic.Skin.label);
-                string botsString = string.Join("\n", botsToRemove.ToArray());
+                string botsString = string.Join("\n", DraftManager.Instance.BotsToRemove.ToArray());
                 botsString = GUILayout.TextArea(botsString, HighLogic.Skin.textArea);
-                botsToRemove = new List<string>();
-                botsToRemove.AddRange(botsString.Split('\n'));
+                DraftManager.Instance.BotsToRemove = new List<string>();
+                if (botsString != "") { DraftManager.Instance.BotsToRemove.AddRange(botsString.Split('\n')); }
 
                 // Save
                 if (GUILayout.Button("Save", HighLogic.Skin.button))
                 {
-                    SaveMessages();
-                    SaveBots();
+                    SaveSettings();
+                    DraftManager.Instance.SaveGlobalSettings();
                 }
             }
 
@@ -708,351 +529,176 @@ namespace DraftTwitchViewers
         #region KSP Functions
 
         /// <summary>
-        /// Creates a new Kerbal, picks a random name from twitch chat, and renames the Kerbal to the random name.
-        /// This method is called via StartCoroutine and won't block the game thread.
+        /// Sets up for a draft.
         /// </summary>
-        /// <returns>The coroutine IEnumerator.</returns>
-        private IEnumerator DraftIntoKrew(bool forDrawing, string job)
+        /// <param name="forDrawing">Whether this draft is for a plain drawing or an actual draft.</param>
+        /// <param name="job">The job for the Kerbal. Optional and defaults to "Any" and is not needed if forDrawing is true.</param>
+        private void DoDraft(bool forDrawing, string job = "Any")
         {
+            SaveSettings();
+            DraftManager.Instance.SaveGlobalSettings();
+
             // Shows the alert as working.
             alertShowing = true;
             draftBusy = true;
             startClip.Play();
 
-            // Creates a new Unity web request (WWW) using the provided channel.
-            WWW getList = new WWW("http://tmi.twitch.tv/group/user/" + channel + "/chatters");
-
-            // Waits for the web request to finish.
-            yield return getList;
-
-            // Parse the result into a list of users, still lowercased.
-            usersInChat = new List<string>();
-            usersInChat.AddRange(ParseIntoNameArray(getList.text, "moderators"));
-            usersInChat.AddRange(ParseIntoNameArray(getList.text, "staff"));
-            usersInChat.AddRange(ParseIntoNameArray(getList.text, "admins"));
-            usersInChat.AddRange(ParseIntoNameArray(getList.text, "global_mods"));
-            usersInChat.AddRange(ParseIntoNameArray(getList.text, "viewers"));
-
-            // Remove any bots present.
-            foreach (string bot in botsToRemove)
-            {
-                usersInChat.Remove(bot);
-            }
-
-            // If it's for a drawing, remove drawn users. If it's for drafting, remove drafted users.
             if (forDrawing)
             {
-                // Remove any users who were already drafted.
-                foreach (string drawn in drawnUsers)
-                {
-                    usersInChat.Remove(drawn);
-                }
+                StartCoroutine(DraftManager.DraftKerbal(DrawingSuccess, DraftFailure, forDrawing, job));
             }
             else
             {
-                // Remove any users who were already drafted.
-                foreach (string drafted in alreadyDrafted)
-                {
-                    usersInChat.Remove(drafted);
-                }
+                StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, forDrawing, job));
             }
-            
+        }
 
-            // Create a new list which will be used to remove from the user list.
-            List<string> toRemove = new List<string>();
+        /// <summary>
+        /// Creates a new Kerbal based on the provided name.
+        /// </summary>
+        /// <param name="kerbalName">The name of the new Kerbal.</param>
+        private void DraftSuccess(string kerbalName)
+        {
+            ProtoCrewMember newKerbal = HighLogic.CurrentGame.CrewRoster.GetNewKerbal();
+            newKerbal.name = kerbalName;
+            KerbalRoster.SetExperienceTrait(newKerbal);
 
-            // Iterate through the regexes.
-            foreach(Regex r in regexes)
+            // If the game is career, subtract the cost of hiring.
+            if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
             {
-                // Iterate through each username per regex.
-                foreach(string u in usersInChat)
-                {
-                    // If the current regex matches the current username,
-                    if (r.IsMatch(u))
-                    {
-                        // Mark the name for removal by adding it to the removal list.
-                        toRemove.Add(u);
-                    }
-                }
+                Funding.Instance.AddFunds(-(double)GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount()), TransactionReasons.CrewRecruited);
             }
-
-            // Iterate through the removal list and remove each entry from the user list.
-            foreach(string r in toRemove)
+            // If the game mode is not Career, set the skill level to maximum possible.
+            else
             {
-                usersInChat.Remove(r);
+                newKerbal.experienceLevel = 5;
+                newKerbal.experience = 9999;
             }
 
-            if (forDrawing)
+            // If the game is Preflight and the user wants to automatically add to the craft,
+            if (IsPreflight && addToCraft)
             {
-                // If the user list is empty,
-                if (usersInChat.Count == 0)
-                {
-                    // Send a failure alert.
-                    alertingMsg = "Can't draw! No more valid users.";
-                    failedToDraft = true;
-                    alertShowing = true;
-                    failureClip.Play();
-                    yield break;
-                }
+                // Generate a selection of parts available for adding.
+                PartSelectionManager.Instance.GenerateSelection(newKerbal);
 
-                // Gets a random user from the list.
-                string userDrafted = usersInChat[UnityEngine.Random.Range(0, usersInChat.Count)];
-
-                drawnUsers.Add(userDrafted);
-
-                // Creates a new Unity web request (WWW) using the user chosen.
-                WWW getUser = new WWW("https://api.twitch.tv/kraken/users/" + userDrafted);
-
-                // Waits for the web request to finish.
-                yield return getUser;
-
-                // Parses the real username of the chosen user.
-                string realUsername = getUser.text.Substring(getUser.text.IndexOf("\"display_name\""));
-                realUsername = realUsername.Substring(realUsername.IndexOf(":") + 2);
-                realUsername = realUsername.Substring(0, realUsername.IndexOf(",") - 1);
-
-                // Alert in-game.
+                // Remove the in-game alert but still play the success tone.
+                alertingMsg = "";
                 draftBusy = false;
-                alertingMsg = drawMessage.Replace("&user", realUsername);
+                alertShowing = false;
+                failedToDraft = false;
+                if (startClip.isPlaying) { startClip.Stop(); }
+                successClip.Play();
+            }
+            // Otherwise,
+            else
+            {
+                // Alert in-game.
+                alertingMsg = draftMessage.Replace("&user", kerbalName).Replace("&skill", newKerbal.experienceTrait.Title);
+                draftBusy = false;
                 failedToDraft = false;
                 alertShowing = true;
+                if (startClip.isPlaying) { startClip.Stop(); }
                 successClip.Play();
-                SaveAlreadyDrawn();
             }
+        }
+
+        /// <summary>
+        /// Displays the winner of the drawing.
+        /// </summary>
+        /// <param name="winner">The winner of the drawing.</param>
+        private void DrawingSuccess(string winner)
+        {
+            // Alert in-game.
+            alertingMsg = drawMessage.Replace("&user", winner);
+            draftBusy = false;
+            failedToDraft = false;
+            alertShowing = true;
+            if (startClip.isPlaying) { startClip.Stop(); }
+            successClip.Play();
+        }
+
+        /// <summary>
+        /// Indicates draft failure.
+        /// </summary>
+        /// <param name="reason">The reason for failure.</param>
+        private void DraftFailure(string reason)
+        {
+            // Alert in-game.
+            alertingMsg = reason;
+            draftBusy = false;
+            failedToDraft = true;
+            alertShowing = true;
+            if (startClip.isPlaying) { startClip.Stop(); }
+            failureClip.Play();
+        }
+
+        /// <summary>
+        /// Saves the settings.
+        /// </summary>
+        private void SaveSettings()
+        {
+            // Load global settings.
+            ConfigNode globalSettings = ConfigNode.Load(settingsLocation + "GlobalSettings.cfg");
+            // If the file exists,
+            if (globalSettings != null)
+            {
+                // Get the draft settings node.
+                ConfigNode draftSettings = globalSettings.GetNode("DRAFT");
+
+                // If the DRAFT node doesn't exist,
+                if (draftSettings == null)
+                {
+                    // Create a new DRAFT node to write to.
+                    draftSettings = globalSettings.AddNode("DRAFT");
+                }
+
+                // Write the addToCraft setting to it.
+                draftSettings.AddValue("addToCraft", addToCraft.ToString());
+
+                // Get the message settings node.
+                ConfigNode messageSettings = globalSettings.GetNode("MESSAGES");
+
+                // If the MESSAGES node doesn't exist,
+                if (messageSettings == null)
+                {
+                    // Create a new MESSAGES node to write to.
+                    messageSettings = globalSettings.AddNode("MESSAGES");
+                }
+
+                // Write the messages to it.
+                if (messageSettings.HasValue("draftMessage")) { messageSettings.SetValue("draftMessage", draftMessage); } else { messageSettings.AddValue("draftMessage", draftMessage); }
+                if (messageSettings.HasValue("drawMessage")) { messageSettings.SetValue("drawMessage", drawMessage); } else { messageSettings.AddValue("drawMessage", drawMessage); }
+            }
+            // If the file doesn't exist,
             else
             {
-                bool foundProperKerbal = false;
-                bool failedToFindOne = false;
-                bool notEnoughFunds = false;
-                bool rosterFull = false;
-                ProtoCrewMember newKerbal = null;
-                string realUsername = null;
+                // Log a warning that it wasn't found.
+                Logger.DebugWarning("(During save) GlobalSettings.cfg wasn't found. Generating to save settings.");
 
-                do
-                {
-                    // If the user list is empty,
-                    if (usersInChat.Count == 0)
-                    {
-                        // No viewers left.
-                        failedToFindOne = true;
-                    }
-                    // Else if the game is Career and hiring would put us in the negative,
-                    else if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER && Funding.Instance.Funds - GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount() + 1) < 0)
-                    {
-                        // Don't allow the draft.
-                        notEnoughFunds = true;
-                    }
-                    // Else if the game is Career and the roster is full,
-                    else if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER && HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount() >= GameVariables.Instance.GetActiveCrewLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.AstronautComplex)))
-                    {
-                        // The roster is full. Can't add another.
+                // Create a new root node.
+                ConfigNode root = new ConfigNode();
 
-                        // Alert in-game.
-                        alertingMsg = cantMessage.Replace("&user", realUsername);
-                        failedToDraft = true;
-                        alertShowing = true;
-                        failureClip.Play();
+                // Create a new DRAFT node to write the general settings to.
+                ConfigNode draftSettings = root.AddNode("DRAFT");
 
-                        // Don't allow the draft.
-                        rosterFull = true;
-                    }
-                    else
-                    {
-                        // Gets a random user from the list.
-                        string userDrafted = usersInChat[UnityEngine.Random.Range(0, usersInChat.Count)];
+                // Write the addToCraft setting to it.
+                draftSettings.AddValue("addToCraft", addToCraft.ToString());
 
-                        // Creates a new Unity web request (WWW) using the user chosen.
-                        WWW getUser = new WWW("https://api.twitch.tv/kraken/users/" + userDrafted);
+                // Create a new MESSAGES node.
+                ConfigNode messageSettings = root.AddNode("MESSAGES");
 
-                        // Waits for the web request to finish.
-                        yield return getUser;
+                // Write the messages to it.
+                messageSettings.AddValue("draftMessage", draftMessage);
+                messageSettings.AddValue("drawMessage", drawMessage);
 
-                        // Parses the real username of the chosen user.
-                        realUsername = getUser.text.Substring(getUser.text.IndexOf("\"display_name\""));
-                        realUsername = realUsername.Substring(realUsername.IndexOf(":") + 2);
-                        realUsername = realUsername.Substring(0, realUsername.IndexOf(",") - 1);
-
-                        // All checks have passed.
-
-                        // Create a new Kerbal prototype and rename.
-                        newKerbal = CrewGenerator.RandomCrewMemberPrototype(ProtoCrewMember.KerbalType.Crew);
-                        newKerbal.name = realUsername + (addKerman ? " Kerman" : "");
-                        KerbalRoster.SetExperienceTrait(newKerbal);
-
-                        // Make sure the new Kerbal has the requested job. Otherwise, pull him/her out of the list and try again.
-                        if (job == "Any" || newKerbal.experienceTrait.Title == job)
-                        {
-                            // The Kerbal is of the right job, or is any job if that's what the drafter wants. Actually create him this time.
-                            newKerbal = HighLogic.CurrentGame.CrewRoster.GetNewKerbal();
-                            newKerbal.name = realUsername + (addKerman ? " Kerman" : "");
-                            KerbalRoster.SetExperienceTrait(newKerbal);
-
-                            // If the game is career, we should subtract the cost of hiring.
-                            if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
-                            {
-                                Funding.Instance.AddFunds(-(double)GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount()), TransactionReasons.CrewRecruited);
-                            }
-
-                            // We found a proper Kerbal, so we can add him to the Already Drafted list and exit the loop.
-                            alreadyDrafted.Add(userDrafted);
-                            foundProperKerbal = true;
-
-                            // If the game is Preflight and the user wants to automatically add to the craft,
-                            if (IsPreflight && addToCraft)
-                            {
-                                PartSelectionManager.Instance.GenerateSelection(newKerbal);
-                            }
-                        }
-                        else
-                        {
-                            // The Kerbal isn't of the right job. Remove them from the list and go again.
-                            usersInChat.Remove(userDrafted);
-                        }
-                    }
-                }
-                while (!foundProperKerbal && !failedToFindOne && !notEnoughFunds && !rosterFull);
-
-                // If we found a Kerbal with the right job,
-                if (foundProperKerbal)
-                {
-                    // If the game mode is not Career, set the skill level to maximum possible.
-                    if (HighLogic.CurrentGame.Mode != Game.Modes.CAREER)
-                    {
-                        newKerbal.experienceLevel = 5;
-                        newKerbal.experience = 9999;
-                    }
-
-                    // Alert in-game.
-                    draftBusy = false;
-                    alertingMsg = draftMessage.Replace("&user", realUsername).Replace("&skill", newKerbal.experienceTrait.Title);
-                    failedToDraft = false;
-                    alertShowing = true;
-                    successClip.Play();
-                    SaveAlreadyDrafted();
-                }
-                else if (failedToFindOne)
-                {
-                    // Send a failure alert.
-                    alertingMsg = "Can't draft! No more valid users.";
-                    failedToDraft = true;
-                    alertShowing = true;
-                    failureClip.Play();
-                }
-                else if (notEnoughFunds)
-                {
-                    // Send a failure alert.
-                    alertingMsg = "Can't draft! Not enough Funds.";
-                    failedToDraft = true;
-                    alertShowing = true;
-                    failureClip.Play();
-                }
+                // Save the file.
+                root.Save(settingsLocation + "GlobalSettings.cfg");
             }
-        }
-
-        /// <summary>
-        /// Saves the user information set by the player.
-        /// </summary>
-        private void SaveUser()
-        {
-            ConfigNode root = new ConfigNode();
-            if (remember)
-            {
-                ConfigNode settings = root.AddNode("USER");
-                settings.AddValue("channel", channel);
-            }
-            root.Save(settingsLocation + "User.cfg");
-        }
-
-        /// <summary>
-        /// Saves the custom messages set by the player.
-        /// </summary>
-        private void SaveMessages()
-        {
-            ConfigNode root = new ConfigNode();
-            ConfigNode settings = root.AddNode("SETTINGS");
-            settings.AddValue("draftMessage", draftMessage);
-            settings.AddValue("drawMessage", drawMessage);
-            settings.AddValue("cantMessage", cantMessage);
-            settings.AddValue("addKerman", addKerman);
-            settings.AddValue("addToCraft", addToCraft);
-            root.Save(settingsLocation + "Messages.cfg");
-        }
-
-        /// <summary>
-        /// Saves the list of bots to remove from the draft list.
-        /// </summary>
-        private void SaveBots()
-        {
-            ConfigNode root = new ConfigNode();
-            ConfigNode bots = root.AddNode("BOTS");
-            foreach(string bot in botsToRemove)
-            {
-                ConfigNode botNode = bots.AddNode("BOT");
-                botNode.AddValue("name", bot);
-            }
-            root.Save(settingsLocation + "Bots.cfg");
-        }
-
-        /// <summary>
-        /// Saves the list of users who have already been pulled for a drawing.
-        /// </summary>
-        private void SaveAlreadyDrawn()
-        {
-            ConfigNode root = new ConfigNode();
-            ConfigNode drawn = root.AddNode("DRAWN");
-            foreach (string user in drawnUsers)
-            {
-                ConfigNode userNode = drawn.AddNode("USER");
-                userNode.AddValue("name", user);
-            }
-            root.Save(settingsLocation + "Drawing.cfg");
-        }
-
-        /// <summary>
-        /// Saves the list of users who have already been drafted in this game save.
-        /// </summary>
-        private void SaveAlreadyDrafted()
-        {
-            ConfigNode root = new ConfigNode();
-            ConfigNode drafted = root.AddNode("DRAFTED");
-            foreach(string user in alreadyDrafted)
-            {
-                ConfigNode userNode = drafted.AddNode("USER");
-                userNode.AddValue("name", user);
-            }
-            root.Save(saveLocation + "Drafted.cfg");
         }
 
         #endregion
 
         #region Misc Methods
-
-        /// <summary>
-        /// Converts a twitch chatter request into a list of users.
-        /// </summary>
-        /// <param name="toParse">The request to parse.</param>
-        /// <param name="parsingFrom">The section of the request to parse.</param>
-        /// <returns>A list of users.</returns>
-        string[] ParseIntoNameArray(string toParse, string parsingFrom)
-        {
-            string toSplit = toParse.Substring(toParse.IndexOf("\"" + parsingFrom + "\": ["));
-            toSplit = toSplit.Substring(toSplit.IndexOf('[') + 1);
-            toSplit = toSplit.Substring(0, toSplit.IndexOf(']'));
-            if (toSplit == "")
-            {
-                return new string[] {};
-            }
-            toSplit = toSplit.Replace(" ", "");
-            toSplit = toSplit.Replace("\n", "");
-            string[] toRet = toSplit.Split(',');
-
-            for (int i = 0; i < toRet.Length; i++)
-            {
-                toRet[i] = toRet[i].Substring(1, toRet[i].Length - 2);
-            }
-
-            return toRet;
-        }
 
         /// <summary>
         /// Determines if the game is currently in Preflight status (The loaded scene is Flight and the active vessel is on the LaunchPad or Runway).
@@ -1069,96 +715,6 @@ namespace DraftTwitchViewers
 
                 return false;
             }
-        }
-
-        #endregion
-
-        #region Regexes
-
-        string[] regexStrings = new string[] {
-
-            "(?<!c)(?:a|4)n(?:a|4)(?:l|i|1)",
-            "(?:a|4)nu(?:s|5)",
-            "(?:a|4)r(?:s|5)(?:e|3)",
-            "(?:a|4)(?:s|5)(?:s|5)",
-            "b(?:a|4)(?:l|i|1)(?:l|i|1)(?:s|5)",
-            "b(?:a|4)(?:s|5)(?:t|7)(?:a|4)rd",
-            "b(?:l|i|1)(?:t|7)ch",
-            "b(?:l|i|1)(?:a|4)(?:t|7)ch",
-            "b(?:l|i|1)(?:o|0)(?:o|0)dy",
-            "b(?:l|i|1)(?:o|0)wj(?:o|0)b",
-            "b(?:o|0)(?:l|i|1)(?:l|i|1)(?:o|0)ck",
-            "b(?:o|0)(?:l|i|1)(?:l|i|1)(?:o|0)k",
-            "b(?:o|0)n(?:e|3)r",
-            "b(?:o|0)(?:o|0)b",
-            "bum",
-            "bu(?:t|7)(?:t|7)",
-            "c(?:l|i|1)(?:l|i|1)(?:t|7)",
-            "c(?:o|0)ck",
-            "c(?:o|0)(?:o|0)n",
-            "cr(?:a|4)p",
-            "cun(?:t|7)",
-            "d(?:a|4)mn",
-            "d(?:l|i|1)ck",
-            "d(?:l|i|1)(?:l|i|1)d(?:o|0)",
-            "dyk(?:e|3)",
-            "(?:e|3)r(?:o|0)(?:t|7)(?:l|i|1)c",
-            "f(?:a|4)g",
-            "f(?:e|3)ck",
-            "f(?:e|3)(?:l|i|1)(?:l|i|1)(?:a|4)(?:t|7)",
-            "f(?:e|3)(?:l|i|1)ch",
-            "fuck",
-            "fudg(?:e|3)p(?:a|4)ck",
-            "f(?:l|i|1)(?:a|4)ng(?:e|3)",
-            "h(?:e|3)(?:l|i|1)(?:l|i|1)",
-            "h(?:l|i|1)(?:t|7)(?:l|i|1)(?:e|3)r",
-            "h(?:o|0)m(?:o|0)",
-            "j(?:e|3)rk",
-            "j(?:l|i|1)zz",
-            "kn(?:o|0)b(?:e|3)nd",
-            "(?:l|i|1)(?:a|4)b(?:l|i|1)(?:a|4)",
-            "(?:l|i|1)m(?:a|4)(?:o|0)",
-            "(?:l|i|1)mf(?:a|4)(?:o|0)",
-            "muff",
-            "n(?:l|i|1)gg(?:(?:e|3)r|(?:a|4))",
-            "(?:o|0)mg",
-            "p(?:e|3)n(?:l|i|1)(?:s|5)",
-            "p(?:l|i|1)(?:s|5)(?:s|5)",
-            "p(?:o|0)(?:o|0)p",
-            "pr(?:l|i|1)ck",
-            "pub(?:e|3)",
-            "pu(?:s|5)(?:s|5)y",
-            "qu(?:e|3)(?:e|3)r",
-            "(?:s|5)(?:a|4)(?:t|7)(?:a|4)n",
-            "(?:s|5)cr(?:o|0)(?:t|7)um",
-            "(?:s|5)(?:e|3)x",
-            "(?:s|5)h(?:l|i|1)(?:t|7)",
-            "(?:s|5)(?:l|i|1)u(?:t|7)",
-            "(?:s|5)m(?:e|3)gm(?:a|4)",
-            "(?:s|5)punk",
-            "(?:t|7)(?:l|i|1)(?:t|7)",
-            "(?:t|7)(?:o|0)(?:s|5)(?:s|5)(?:e|3)r",
-            "(?:t|7)urd",
-            "(?:t|7)w(?:a|4)(?:t|7)",
-            "v(?:a|4)g(?:l|i|1)n(?:a|4)",
-            "w(?:a|4)nk",
-            "wh(?:o|0)r(?:e|3)",
-            "w(?:t|7)f"
-        };
-
-        Regex[] regexes;
-
-        void InitRegexes()
-        {
-            List<Regex> rList = new List<Regex>();
-
-            foreach (string r in regexStrings)
-            {
-                Regex rNew = new Regex(r, RegexOptions.IgnoreCase);
-                rList.Add(rNew);
-            }
-
-            regexes = rList.ToArray();
         }
 
         #endregion
