@@ -545,11 +545,11 @@ namespace DraftTwitchViewers
 
             if (forDrawing)
             {
-                StartCoroutine(DraftManager.DraftKerbal(DrawingSuccess, DraftFailure, forDrawing, job));
+                StartCoroutine(DraftManager.DraftKerbal(DrawingSuccess, DraftFailure, forDrawing, false, job));
             }
             else
             {
-                StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, forDrawing, job));
+                StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, forDrawing, false, job));
             }
         }
 

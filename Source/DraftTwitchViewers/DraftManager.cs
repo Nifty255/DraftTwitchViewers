@@ -244,7 +244,7 @@ namespace DraftTwitchViewers
         /// <param name="forDrawing">Whether the draft is for a drawing, or for an actual draft.</param>
         /// <param name="job">The job for the Kerbal. Optional and defaults to "Any" and is not needed if forDrawing is true.</param>
         /// <returns>The IEnumerator (used for making the draft asynchronously).</returns>
-        public static IEnumerator DraftKerbal(Action<string> success, Action<string> failure, bool forDrawing, string job = "Any")
+        public static IEnumerator DraftKerbal(Action<string> success, Action<string> failure, bool forDrawing, bool suppressSave, string job = "Any")
         {
             // If a channel hasn't been input yet,
             if (string.IsNullOrEmpty(instance.Channel))
@@ -334,8 +334,6 @@ namespace DraftTwitchViewers
                             // Gets a random user from the list.
                             string userDrawn = usersInChat[UnityEngine.Random.Range(0, usersInChat.Count)];
 
-                            instance.DrawnUsers.Add(userDrawn);
-
                             // Creates a new Unity web request (WWW) using the user chosen.
                             WWW getUser = new WWW("https://api.twitch.tv/kraken/users/" + userDrawn);
 
@@ -350,8 +348,13 @@ namespace DraftTwitchViewers
                                 realUsername = realUsername.Substring(realUsername.IndexOf(":") + 2);
                                 realUsername = realUsername.Substring(0, realUsername.IndexOf(",") - 1);
 
-                                // Save save the new user in the drawing file.
-                                instance.SaveDrawn();
+                                // If the save is not supressed,
+                                if (!suppressSave)
+                                {
+                                    // Save the new user in the drawing file.
+                                    instance.DrawnUsers.Add(userDrawn);
+                                    instance.SaveDrawn();
+                                }
 
                                 // Invoke the success Action, allowing the caller to continue.
                                 success.Invoke(realUsername);
@@ -373,6 +376,7 @@ namespace DraftTwitchViewers
                         int searchAttempts = 0;
 
                         // Set up Kerbal data variables.
+                        string oddUsername = null;
                         string realUsername = null;
 
                         // Perform the search loop at least once, and repeat until success or failure.
@@ -415,8 +419,8 @@ namespace DraftTwitchViewers
                                     // If the kerbal satisfies the job requirements, wait... We actually search for qualifications?
                                     if (job == "Any" || newKerbal.experienceTrait.Title == job)
                                     {
-                                        // We found a proper Kerbal, so we can add him to the Already Drafted list and exit the loop.
-                                        instance.AlreadyDrafted.Add(userDrafted);
+                                        // We found a proper Kerbal, so we can exit the loop.
+                                        oddUsername = userDrafted;
                                         foundProperKerbal = true;
                                     }
                                     // Otherwise,
@@ -439,8 +443,13 @@ namespace DraftTwitchViewers
                         // If we found a Kerbal with the right job,
                         if (foundProperKerbal)
                         {
-                            // Save save the new user in the drawing file.
-                            instance.SaveDrafted();
+                            // If the save is not supressed,
+                            if (!suppressSave)
+                            {
+                                // Save the new user in the drawing file.
+                                instance.AlreadyDrafted.Add(oddUsername);
+                                instance.SaveDrafted();
+                            }
 
                             // Invoke the success Action, allowing the caller to continue.
                             success.Invoke(realUsername + (instance.AddKerman ? " Kerman" : ""));
@@ -665,6 +674,30 @@ namespace DraftTwitchViewers
                 // Save the file.
                 root.Save(saveLocation + "DTVLocalSettings.cfg");
             }
+        }
+
+        /// <summary>
+        /// Converts the specified Kerbal name back to a viewer username, and saves it.
+        /// </summary>
+        /// <param name="kerbalName">The Kerbal name.</param>
+        public static void SaveSupressedDraft(string kerbalName)
+        {
+            // copy the name for modification.
+            string newName = kerbalName;
+
+            // If " Kerman" is in the name,
+            if (newName.Contains(" Kerman"))
+            {
+                // Remove it!
+                newName = newName.Split(' ')[0];
+            }
+
+            // Set the name to all lowercase.
+            newName = newName.ToLower();
+
+            // Save the supressed name.
+            instance.AlreadyDrafted.Add(newName);
+            instance.SaveDrafted();
         }
 
         #endregion

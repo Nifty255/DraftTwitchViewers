@@ -29,6 +29,12 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 
 CHANGELOG:
 
+v2.0.1:
+- Downgraded target framework from .NET 4.5 to 3.5 to fix mod integration issues.
+- Added parameter which can suppress drafts being saved.
+- Suppressed saves allow for situations in which it is unclear whether or not the drafted viewer will be used.
+- If an unsaved Kerbal will be used, the draft caller can save the name manually through "SaveSuppressedDraft".
+
 v2.0:
 - Large code refactor to allow for third-party mod integration.
 - Settings reworked for consolidation and added stability.
