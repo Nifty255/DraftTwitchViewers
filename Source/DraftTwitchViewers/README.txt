@@ -1,5 +1,5 @@
 ﻿Draft Twitch Viewers
-v2.0: Release
+v2.1: Release
 
 This software is provided "as-is" with no warranties.
 
@@ -26,8 +26,17 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 - Customize the draft success message and the drawing success message.
 - Fully compatible with both Crew Manifest and Ship Manifest.
 - Players can add the viewer directly to the current vessel.
+- Rescue your viewers with DTV modified Career Mode Rescue Contracts!
 
 CHANGELOG:
+
+v2.1:
+- Careeer Mode Rescue Contracts are now modified by DTV to replace stock Kerbals with drafted viewers.
+- When a rescue contract is offered, DTV silently drafts and replaces the old Kerbal with the new.
+- The DTV contract system will deactivate after 5 consecutive failures and notify the player.
+- The DTV contract system will skip a contract if there is no channel name and notify the player.
+- NOTE: Unknown results can occur if a contract is accepted before it can be modified. A fix is in the works.
+- NOTE: To alleviate the above issue, modified contracts show a pre-completed "Modified By DTV" objective.
 
 v2.0.1:
 - Downgraded target framework from .NET 4.5 to 3.5 to fix mod integration issues.
