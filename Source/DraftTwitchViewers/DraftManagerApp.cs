@@ -37,6 +37,10 @@ namespace DraftTwitchViewers
         /// </summary>
         private float maxTimeToReset = 0.25f;
         /// <summary>
+        /// Is the game UI hidden?
+        /// </summary>
+        private bool isUIHidden = false;
+        /// <summary>
         /// Is the app showing?
         /// </summary>
         private bool isShowing = false;
@@ -228,6 +232,15 @@ namespace DraftTwitchViewers
         }
 
         /// <summary>
+        /// Called when the MonoBehaviour is started.
+        /// </summary>
+        private void Start()
+        {
+            GameEvents.onShowUI.Add(OnShowUI);
+            GameEvents.onHideUI.Add(OnHideUI);
+        }
+
+        /// <summary>
         /// Called when Unity updates.
         /// </summary>
         void Update()
@@ -245,6 +258,12 @@ namespace DraftTwitchViewers
             {
                 rightClickFound = false;
             }
+        }
+
+        private void OnDestroy()
+        {
+            GameEvents.onShowUI.Remove(OnShowUI);
+            GameEvents.onHideUI.Remove(OnHideUI);
         }
 
         #endregion
@@ -347,14 +366,14 @@ namespace DraftTwitchViewers
         private void OnGUI()
         {
             // If the app is showing ir hovered over,
-            if (isShowing || isHovering)
+            if ((isShowing || isHovering) && !isUIHidden)
             {
                 // Display the window.
                 GUILayout.Window(GetInstanceID(), windowRect, AppWindow, "Draft Twitch Viewers", HighLogic.Skin.window);
             }
 
             // If the alert is showing,
-            if (alertShowing)
+            if (alertShowing && !isUIHidden)
             {
                 // Display the window.
                 GUILayout.Window(GetInstanceID() + 1, alertRect, AlertWindow, "DTV Alert: " + (failedToDraft ? "Failed!" : (draftBusy ? "Working..." : "Success!")), HighLogic.Skin.window);
@@ -522,6 +541,22 @@ namespace DraftTwitchViewers
             }
 
             GUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// Called when the game UI is shown.
+        /// </summary>
+        private void OnShowUI()
+        {
+            isUIHidden = false;
+        }
+
+        /// <summary>
+        /// Called when the game UI is hidden.
+        /// </summary>
+        private void OnHideUI()
+        {
+            isUIHidden = true;
         }
 
         #endregion

@@ -30,6 +30,9 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 
 CHANGELOG:
 
+v2.1.1:
+- DTV's Draft App now toggles visibility with the game UI.
+
 v2.1:
 - Careeer Mode Rescue Contracts are now modified by DTV to replace stock Kerbals with drafted viewers.
 - When a rescue contract is offered, DTV silently drafts and replaces the old Kerbal with the new.
