@@ -30,6 +30,9 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 
 CHANGELOG:
 
+v2.1.2:
+- Fixed improper saving of the "Add Kerbal to Craft" setting.
+
 v2.1.1:
 - DTV's Draft App now toggles visibility with the game UI.
 

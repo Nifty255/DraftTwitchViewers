@@ -688,7 +688,7 @@ namespace DraftTwitchViewers
                 }
 
                 // Write the addToCraft setting to it.
-                draftSettings.AddValue("addToCraft", addToCraft.ToString());
+                if (draftSettings.HasValue("addToCraft")) { draftSettings.SetValue("addToCraft", addToCraft.ToString()); } else { draftSettings.AddValue("addToCraft", addToCraft.ToString()); }
 
                 // Get the message settings node.
                 ConfigNode messageSettings = globalSettings.GetNode("MESSAGES");
