@@ -1,5 +1,5 @@
 ﻿Draft Twitch Viewers
-v2.1: Release
+v2.1.3: Release
 
 This software is provided "as-is" with no warranties.
 
@@ -29,6 +29,9 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 - Rescue your viewers with DTV modified Career Mode Rescue Contracts!
 
 CHANGELOG:
+
+v2.1.3:
+- Fixed the Draft Manager App not saving at all.
 
 v2.1.2:
 - Fixed improper saving of the "Add Kerbal to Craft" setting.

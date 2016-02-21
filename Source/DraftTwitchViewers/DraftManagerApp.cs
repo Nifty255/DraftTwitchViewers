@@ -703,6 +703,9 @@ namespace DraftTwitchViewers
                 // Write the messages to it.
                 if (messageSettings.HasValue("draftMessage")) { messageSettings.SetValue("draftMessage", draftMessage); } else { messageSettings.AddValue("draftMessage", draftMessage); }
                 if (messageSettings.HasValue("drawMessage")) { messageSettings.SetValue("drawMessage", drawMessage); } else { messageSettings.AddValue("drawMessage", drawMessage); }
+
+                // Save the file.
+                globalSettings.Save(settingsLocation + "GlobalSettings.cfg");
             }
             // If the file doesn't exist,
             else
