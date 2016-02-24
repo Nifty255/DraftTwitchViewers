@@ -6,22 +6,22 @@ using Contracts;
 namespace DraftTwitchViewers
 {
     /// <summary>
-    /// The RescueContractModifier. This class hooks into contracts and modifies Kerbal Rescue contracts, drafting viewers instead.
+    /// The TourismContractModifier. This class hooks into contracts and modifies Kerbal Tourism contracts, drafting viewers instead.
     /// </summary>
     [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    class RescueContractModifier : MonoBehaviour
+    class TourismContractModifier : MonoBehaviour
     {
         #region Variables
 
         /// <summary>
         /// The instance of this class.
         /// </summary>
-        private static RescueContractModifier instance;
+        private static TourismContractModifier instance;
 
         /// <summary>
         /// The public instance of this class.
         /// </summary>
-        public static RescueContractModifier Instance
+        public static TourismContractModifier Instance
         {
             get { return instance; }
         }
@@ -30,6 +30,11 @@ namespace DraftTwitchViewers
         /// The queue used to store contracts waiting to be modified.
         /// </summary>
         private Queue<Contract> contractsToModify;
+
+        /// <summary>
+        /// The queue used to store drafted names. Acts as a buffer to hold names since a single tourism contract can have multiple tourists.
+        /// </summary>
+        private Queue<string> draftNames;
 
         /// <summary>
         /// True if the contract modifier is currently waiting on a draft.
@@ -50,11 +55,12 @@ namespace DraftTwitchViewers
         /// </summary>
         void Awake()
         {
-            // Prevent destroy.
+            instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // Create the queue.
+            // Create the queues.
             contractsToModify = new Queue<Contract>();
+            draftNames = new Queue<string>();
 
             // Hook into contract offers.
             GameEvents.Contract.onOffered.Add(EnqueueContract);
@@ -89,7 +95,7 @@ namespace DraftTwitchViewers
         }
 
         /// <summary>
-        /// Enqueues any rescue contracts offered.
+        /// Enqueues any tourism contracts offered.
         /// </summary>
         /// <param name="toEnqueue">The contract to test and enqueue.</param>
         void EnqueueContract(Contract toEnqueue)
@@ -98,20 +104,20 @@ namespace DraftTwitchViewers
             ConfigNode test = new ConfigNode();
             toEnqueue.Save(test);
 
-            // If the contract is of the RecoverAsset type,
-            if (test.GetValue("type") == "RecoverAsset")
+            // If the contract is of the TourismContract type,
+            if (test.GetValue("type") == "TourismContract")
             {
-                // If the saved ConfigNode contains a kerbalName value,
-                if (test.HasValue("kerbalName"))
+                // If the saved ConfigNode contains a tourists value,
+                if (test.HasValue("tourists"))
                 {
                     // If the value contained isn't null or empty,
-                    if (!string.IsNullOrEmpty(test.GetValue("kerbalName")))
+                    if (!string.IsNullOrEmpty(test.GetValue("tourists")))
                     {
                         // If the contract wasn't already modified,
                         if (test.GetNodes("PARAM")[0].GetValue("name") != "ModifiedByDTV")
                         {
-                            // The contract is a proper rescue contract.
-                            Logger.DebugLog("Rescue contract found: " + test.GetValue("kerbalName"));
+                            // The contract is a proper tourism contract.
+                            Logger.DebugLog("Tourism contract found: " + test.GetValue("tourists"));
 
                             // Enqueue it.
                             contractsToModify.Enqueue(toEnqueue);
@@ -135,93 +141,88 @@ namespace DraftTwitchViewers
         /// <param name="kerbalName">The name of the drafted viewer.</param>
         void DraftSuccess(string kerbalName)
         {
+            // Enqueue the name first thing, since it needs to be in the queue whether it has enough with it or not.
+            draftNames.Enqueue(kerbalName);
+
             // Resets failures. The addon should only destroy after 5 consecutive failures.
             failures = 0;
 
-            // Get the next contract in the queue.
-            Contract toMod = contractsToModify.Dequeue();
+            // Peek at the next contract in the queue instead of dequeueing because there might not yet be enough names to cover the contract.
+            Contract toMod = contractsToModify.Peek();
 
             // Create a ConfigNode to save the contract into.
             ConfigNode replacement = new ConfigNode("CONTRACT");
             toMod.Save(replacement);
 
-            // Get the old Kerbal name for later use.
-            string oldName = replacement.GetValue("kerbalName");
+            // Obtain a list of the old tourists in the contract.
+            string[] oldTourists = replacement.GetValue("tourists").Split('|');
 
-            // Replace the old name with the new.
-            replacement.SetValue("kerbalName", kerbalName);
-
-            // For each PARAM node in the CONTRACT node,
-            foreach (ConfigNode node in replacement.nodes)
+            // If the count of names in the queue plus this name equals the number of tourists,
+            if (draftNames.Count == oldTourists.Length)
             {
-                // Get the name of the contract parameter.
-                string paramName = node.GetValue("name");
+                // Dequeue the contract we peeked because there are enough names for it.
+                contractsToModify.Dequeue();
 
-                // Perform certain replacement functions for each parameter.
-                switch (paramName)
+                // Create an array from the queue and clear it.
+                string[] newTourists = draftNames.ToArray();
+                draftNames.Clear();
+
+                // Replace the contract "tourists" string.
+                replacement.SetValue("tourists", string.Join("|", newTourists));
+
+                // Get a list of PARAM nodes in the contract.
+                ConfigNode[] paramNodes = replacement.GetNodes("PARAM");
+
+                // Iterate through them,
+                for (int i = 0; i < paramNodes.Length; i++)
                 {
-                    case "AcquireCrew":
-                        {
-                            node.SetValue("title", "Save " + kerbalName);
-                            break;
-                        }
-                    case "AcquirePart":
-                        {
-                            string firstName = kerbalName.Substring(0, kerbalName.IndexOf(' '));
-                            node.SetValue("title", "Obtain " + firstName + "'s Scrap");
-                            break;
-                        }
-                    case "RecoverKerbal":
-                        {
-                            node.SetValue("title", "Recover " + kerbalName + " on Kerbin");
-                            break;
-                        }
-                    case "RecoverPart":
-                        {
-                            string firstName = kerbalName.Substring(0, kerbalName.IndexOf(' '));
-                            node.SetValue("title", "Recover " + firstName + "'s Scrap on Kerbin");
-                            break;
-                        }
+                    // And replace their kerbalName values.
+                    paramNodes[i].SetValue("kerbalName", newTourists[i]);
+
+                    // Iterate through any sub-PARAMS,
+                    foreach (ConfigNode subParam in paramNodes[i].GetNodes("PARAM"))
+                    {
+                        // And replace their kerbalName values as well.
+                        subParam.SetValue("kerbalName", newTourists[i]);
+                    }
+
+                    // Remove the parameter from the actual contract to prevent duplicates.
+                    toMod.RemoveParameter(0);
+
+                    // Get an old Kerbal and rename it.
+                    ProtoCrewMember toRename = HighLogic.CurrentGame.CrewRoster[oldTourists[i]];
+                    toRename.name = newTourists[i];
+                }
+
+                // Add the custom parameter indicating DTV has modified this contract.
+                toMod.AddParameter((ContractParameter)new ModifiedByDTV());
+
+                // Reload the contract.
+                Contract.Load(toMod, replacement);
+
+                // Logging.
+                Logger.DebugLog("Draft Success (" + contractsToModify.Count.ToString() + " contracts waiting): " + string.Join("|", newTourists));
+
+                // Refresh the contract list by firing the onContractListChanged event.
+                GameEvents.Contract.onContractsListChanged.Fire();
+
+                // If the queue is not empty,
+                if (contractsToModify.Count > 0)
+                {
+                    // Begin another draft.
+                    StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
+                }
+                // Else, the queue is empty.
+                else
+                {
+                    // Indicate a stop in waiting status.
+                    working = false;
                 }
             }
-
-            // Get a count of parameters currently held by the contract.
-            int parameters = toMod.ParameterCount;
-
-            // Iterate using this count, removing the one parameter each time, effectively clearing the list.
-            for (int i = 0; i < parameters; i++)
-            {
-                // Remove the first parameter.
-                toMod.RemoveParameter(0);
-            }
-
-            // Add the custom parameter indicating DTV has modified this contract.
-            toMod.AddParameter((ContractParameter)new ModifiedByDTV());
-            
-            // Reload the contract.
-            Contract.Load(toMod, replacement);
-
-            // Get the old Kerbal and rename it.
-            ProtoCrewMember toRename = HighLogic.CurrentGame.CrewRoster[oldName];
-            toRename.name = kerbalName;
-
-            // Logging.
-            Logger.DebugLog("Draft Success (" + contractsToModify.Count.ToString() + " contracts waiting): " + kerbalName);
-
-            // Refresh the contract list by firing the onContractListChanged event.
-            GameEvents.Contract.onContractsListChanged.Fire();
-
-            // If the queue is not empty,
-            if (contractsToModify.Count > 0)
-            {
-                // Begin another draft.
-                StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
-            }
-            // Else, the queue is empty.
+            // Else, run another draft.
             else
             {
-                // Indicate a stop in waiting status.
-                working = false;
+                StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
             }
         }
 
