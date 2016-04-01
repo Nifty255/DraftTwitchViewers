@@ -33,18 +33,33 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\KSP Test Folder\1.0.2\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\..\KSP Test Folder\1.1P\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\KSP Test Folder\1.1P\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="KSPAssets">
+      <HintPath>..\..\..\..\..\KSP Test Folder\1.1P\KSP_Data\Managed\KSPAssets.dll</HintPath>
+    </Reference>
+    <Reference Include="KSPCore">
+      <HintPath>..\..\..\..\..\KSP Test Folder\1.1P\KSP_Data\Managed\KSPCore.dll</HintPath>
+    </Reference>
+    <Reference Include="KSPUtil">
+      <HintPath>..\..\..\..\..\KSP Test Folder\1.1P\KSP_Data\Managed\KSPUtil.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\KSP Test Folder\1.0.2\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\..\KSP Test Folder\1.1P\KSP_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>..\..\..\..\..\KSP Test Folder\1.1P\KSP_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -71,9 +86,7 @@ copy /Y "D:\Documents\GitHub\DraftTwitchViewers\Source\DraftTwitchViewers\README
 
 copy /Y "D:\Documents\GitHub\DraftTwitchViewers\DraftTwitchViewers\README.txt" "D:\Documents\GitHub\DraftTwitchViewers\README.md"
 
-copy /Y "$(TargetDir)$(TargetFileName)" "D:\Documents\GitHub\DraftTwitchViewers\DraftTwitchViewers\Plugins\$(TargetFileName)"
-
-xcopy "D:\Documents\GitHub\DraftTwitchViewers\DraftTwitchViewers" "D:\KSP Test Folder\1.0.5\GameData\DraftTwitchViewers" /S /E /Y</PostBuildEvent>
+xcopy "D:\Documents\GitHub\DraftTwitchViewers\DraftTwitchViewers" "D:\KSP Test Folder\1.1P\GameData\DraftTwitchViewers" /S /E /Y</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

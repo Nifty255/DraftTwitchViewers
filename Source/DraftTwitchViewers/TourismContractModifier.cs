@@ -55,7 +55,10 @@ namespace DraftTwitchViewers
         /// </summary>
         void Awake()
         {
+            // Assign the instance.
             instance = this;
+
+            // Prevent destroy.
             DontDestroyOnLoad(gameObject);
 
             // Create the queues.
@@ -240,7 +243,7 @@ namespace DraftTwitchViewers
                 working = false;
 
                 // Notify the player that the contract draft failed because of a lack of channel.
-                ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">Contract draft FAILED. (Please input a channel to draft from.)</color>", new ScreenMessage(string.Empty, 5f, ScreenMessageStyle.UPPER_CENTER), true);
+                ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">Contract draft FAILED. (Please input a channel to draft from.)</color>", 5f, ScreenMessageStyle.UPPER_CENTER);
 
             }
             // Else, follow normal failure procedure.
@@ -269,7 +272,7 @@ namespace DraftTwitchViewers
                 if (failures == 5)
                 {
                     // Notify the player that the contract draft failed consecutively.
-                    ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">Contract draft FAILED. (5 failed attempts. Deactivating.)</color>", new ScreenMessage(string.Empty, 5f, ScreenMessageStyle.UPPER_CENTER), true);
+                    ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">Contract draft FAILED. (5 failed attempts. Deactivating.)</color>", 5f, ScreenMessageStyle.UPPER_CENTER);
 
                     // Log an error and destroy the addon.
                     Logger.DebugError("5 failed Contract Drafts. Disabling.");

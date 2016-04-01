@@ -120,7 +120,7 @@ namespace DraftTwitchViewers
             if (availableSeats.Count == 0)
             {
                 // Post to the screen and leave it.
-                ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">No available seating.</color>", lower, true);
+                ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">No available seating.</color>", 3f, ScreenMessageStyle.LOWER_CENTER);
 
                 // Clean up the manager
                 CleanUp();
@@ -158,8 +158,11 @@ namespace DraftTwitchViewers
                 toAdd.seat.SpawnCrew();
             }
 
+            // Fire a fake crew transfer event to update the crew portraits.
+            GameEvents.onCrewTransferred.Fire(new GameEvents.HostedFromToAction<ProtoCrewMember, Part>(toAdd, p, p));
+
             // Post to the screen and leave it.
-            ScreenMessages.PostScreenMessage(toAdd.name + " added to " + p.partInfo.title + ".", lower, true);
+            ScreenMessages.PostScreenMessage(toAdd.name + " added to " + p.partInfo.title + ".", 3f, ScreenMessageStyle.LOWER_CENTER);
 
             // Clean up the manager
             CleanUp();

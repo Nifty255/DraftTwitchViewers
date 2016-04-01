@@ -1,5 +1,5 @@
 ﻿Draft Twitch Viewers
-v2.2: Release
+v2.3: Release
 
 This software is provided "as-is" with no warranties.
 
@@ -29,6 +29,12 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 - Rescue your viewers or take them on tours with DTV modified Career Mode Contracts!
 
 CHANGELOG:
+
+v2.3:
+- KSP 1.1 PRE-RELEASE Kompatibility Update. BUGS ARE EXPECTED.
+- Fixed a UI bug which mishandled window positioning on >1080p resolutions.
+- Due to inkompatibilities, right clicking the app icon no longer drafts.
+- Alt+D is the new drafting shortcut.
 
 v2.2:
 - All compatible contracts can now be retroactively modified to include drafted viewers.

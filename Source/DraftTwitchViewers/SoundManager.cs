@@ -117,7 +117,7 @@ namespace DraftTwitchViewers
             audio.volume = GameSettings.SHIP_VOLUME;
             audio.rolloffMode = AudioRolloffMode.Linear;
             audio.dopplerLevel = 0f;
-            audio.panLevel = 1f;
+            audio.panStereo = 0f;
             audio.maxDistance = 30f;
             audio.loop = loop;
             audio.playOnAwake = false;

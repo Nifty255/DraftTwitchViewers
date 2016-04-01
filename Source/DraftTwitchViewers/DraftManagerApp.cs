@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using KSP.UI.Screens;
 
 namespace DraftTwitchViewers
 {
@@ -22,18 +23,6 @@ namespace DraftTwitchViewers
         /// The App Launcher Button
         /// </summary>
         private ApplicationLauncherButton draftManagerButton;
-        /// <summary>
-        /// Was a right click found?
-        /// </summary>
-        private bool rightClickFound = false;
-        /// <summary>
-        /// The current number of frames since a right click was found.
-        /// </summary>
-        private float currentTimeToReset = 0;
-        /// <summary>
-        /// The max number of frames since a right click was found.
-        /// </summary>
-        private float maxTimeToReset = 0.25f;
         /// <summary>
         /// Is the game UI hidden?
         /// </summary>
@@ -214,7 +203,7 @@ namespace DraftTwitchViewers
                        DummyVoid,
                        Disable,
                        ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.FLIGHT,
-                       (Texture)GameDatabase.Instance.GetTexture("DraftTwitchViewers/Textures/Toolbar", false));
+                       GameDatabase.Instance.GetTexture("DraftTwitchViewers/Textures/Toolbar", false));
 
             // This app should be mutually exclusive. (It should disappear when the player clicks on another app.
             ApplicationLauncher.Instance.EnableMutuallyExclusive(draftManagerButton);
@@ -243,18 +232,13 @@ namespace DraftTwitchViewers
         /// </summary>
         void Update()
         {
-            if (!rightClickFound)
+            if ((Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) && Input.GetKeyUp(KeyCode.D))
             {
-                rightClickFound = Input.GetKeyDown(KeyCode.Mouse1);
-                currentTimeToReset = 0;
-            }
-            else if (currentTimeToReset < maxTimeToReset)
-            {
-                currentTimeToReset += Time.deltaTime;
-            }
-            else if (rightClickFound)
-            {
-                rightClickFound = false;
+                // Lowercase the channel.
+                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
+
+                // Perform the draft.
+                DoDraft(false);
             }
         }
 
@@ -273,20 +257,7 @@ namespace DraftTwitchViewers
         /// </summary>
         private void DisplayApp()
         {
-            if (rightClickFound)
-            {
-                // Lowercase the channel.
-                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
-
-                // Perform the draft.
-                DoDraft(false);
-
-                draftManagerButton.SetFalse(false);
-            }
-            else
-            {
-                isShowing = true;
-            }
+            isShowing = true;
         }
 
         /// <summary>
@@ -327,11 +298,24 @@ namespace DraftTwitchViewers
         /// </summary>
         private void Reposition()
         {
-            // Gets the button's anchor in 3D space.
-            float anchor = draftManagerButton.GetAnchor().x;
+            //// Gets the button's anchor in 3D space.
+            //float anchor = draftManagerButton.GetAnchor().x;
 
-            // Adjusts the window bounds.
-            windowRect = new Rect(Mathf.Min(anchor + 1210.5f - (windowWidth * (isCustomizing ? 2 : 1)), Screen.width - (windowWidth * (isCustomizing ? 2 : 1))), 40f, (windowWidth * (isCustomizing ? 2 : 1)), windowHeight);
+            //// Adjusts the window bounds.
+            //windowRect = new Rect(Mathf.Min(anchor + 1210.5f - (windowWidth * (isCustomizing ? 2 : 1)), Screen.width - (windowWidth * (isCustomizing ? 2 : 1))), 40f, (windowWidth * (isCustomizing ? 2 : 1)), windowHeight);
+
+            // If the current scene is flight,
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                // Set the window to the top right, offsetting for the size and launcher area.
+                windowRect = new Rect(Screen.width - (windowWidth * (isCustomizing ? 2 : 1)) - 42, 0f, (windowWidth * (isCustomizing ? 2 : 1)), windowHeight);
+            }
+            // Else, if the current scene is the Space Center,
+            else if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
+            {
+                // Set the window to the bottom right, offsetting for the size and launcher area.
+                windowRect = new Rect(Screen.width - (windowWidth * (isCustomizing ? 2 : 1)), 42f, (windowWidth * (isCustomizing ? 2 : 1)), windowHeight);
+            }
         }
 
         /// <summary>
@@ -387,6 +371,10 @@ namespace DraftTwitchViewers
         private void AppWindow(int windowID)
         {
             GUILayout.BeginVertical(HighLogic.Skin.box);
+
+            // Show draft shortcut (Alt+D)
+            GUILayout.Label("Quick Draft: Alt+D", HighLogic.Skin.label);
+            GUILayout.Label("", HighLogic.Skin.label);
 
             // Channel
             GUILayout.Label("Channel (Lowercase):", HighLogic.Skin.label);
