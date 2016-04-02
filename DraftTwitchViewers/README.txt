@@ -30,6 +30,9 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 
 CHANGELOG:
 
+v2.3.1
+- Incremented version info.
+
 v2.3:
 - KSP 1.1 PRE-RELEASE Kompatibility Update. BUGS ARE EXPECTED.
 - Fixed a UI bug which mishandled window positioning on >1080p resolutions.
