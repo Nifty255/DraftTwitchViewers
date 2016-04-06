@@ -94,6 +94,10 @@ namespace DraftTwitchViewers
         #region Settings
 
         /// <summary>
+        /// Use the hotkey to draft?
+        /// </summary>
+        private bool useHotkey = true;
+        /// <summary>
         /// Add the kerbal to the current craft when drafted?
         /// </summary>
         private bool addToCraft = false;
@@ -114,8 +118,60 @@ namespace DraftTwitchViewers
         /// The settings save location.
         /// </summary>
         private string settingsLocation = "GameData/DraftTwitchViewers/";
+        /// <summary>
+        /// Has something changed that we need to save?
+        /// </summary>
+        private bool needSave = false;
+        /// <summary>
+        /// The current delay time for saving.
+        /// </summary>
+        private float currentSaveDelay = 1f;
+        /// <summary>
+        /// The max delay time for saving.
+        /// </summary>
+        private const float maxSaveDelay = 1f;
 
         #endregion
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// UseHotkey property. Triggers autosave when changed.
+        /// </summary>
+        private bool UseHotkey
+        {
+            get { return useHotkey; }
+            set { if (useHotkey != value) { useHotkey = value; SaveSettings(); } }
+        }
+
+        /// <summary>
+        /// AddToCraft property. Triggers autosave when changed.
+        /// </summary>
+        private bool AddToCraft
+        {
+            get { return addToCraft; }
+            set { if (addToCraft != value) { addToCraft = value; SaveSettings(); } }
+        }
+
+        /// <summary>
+        /// DraftMessage property. Triggers autosave (after delay) when changed.
+        /// </summary>
+        private string DraftMessage
+        {
+            get { return draftMessage; }
+            set { if (draftMessage != value) { draftMessage = value; needSave = true; currentSaveDelay = 0f; } }
+        }
+
+        /// <summary>
+        /// DrawMessage property. Triggers autosave (after delay) when changed.
+        /// </summary>
+        private string DrawMessage
+        {
+            get { return drawMessage; }
+            set { if (drawMessage != value) { drawMessage = value; needSave = true; currentSaveDelay = 0f; } }
+        }
 
         #endregion
 
@@ -232,13 +288,25 @@ namespace DraftTwitchViewers
         /// </summary>
         void Update()
         {
-            if ((Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) && Input.GetKeyUp(KeyCode.D))
+            if (UseHotkey && (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) && Input.GetKeyUp(KeyCode.D))
             {
                 // Lowercase the channel.
-                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
+                DraftManager.Instance.channel = DraftManager.Instance.channel.ToLower();
 
                 // Perform the draft.
                 DoDraft(false);
+            }
+
+            // Update the save delay if needed.
+            if (currentSaveDelay < maxSaveDelay)
+            {
+                currentSaveDelay += Time.deltaTime;
+            }
+            // Save if the delay has been reached.
+            else if (needSave)
+            {
+                SaveSettings();
+                needSave = false;
             }
         }
 
@@ -373,12 +441,12 @@ namespace DraftTwitchViewers
             GUILayout.BeginVertical(HighLogic.Skin.box);
 
             // Show draft shortcut (Alt+D)
-            GUILayout.Label("Quick Draft: Alt+D", HighLogic.Skin.label);
+            GUILayout.Label("Quick Draft: Alt+D (Toggle " + (UseHotkey ? "off" : "on") + " in Customize)", HighLogic.Skin.label);
             GUILayout.Label("", HighLogic.Skin.label);
 
             // Channel
             GUILayout.Label("Channel (Lowercase):", HighLogic.Skin.label);
-            DraftManager.Instance.Channel = GUILayout.TextField(DraftManager.Instance.Channel, HighLogic.Skin.textField);
+            DraftManager.Instance.channel = GUILayout.TextField(DraftManager.Instance.channel, HighLogic.Skin.textField);
 
             //Spacer Label
             GUILayout.Label("", HighLogic.Skin.label);
@@ -393,7 +461,7 @@ namespace DraftTwitchViewers
             if (GUILayout.Button("Draft a Pilot", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
+                DraftManager.Instance.channel = DraftManager.Instance.channel.ToLower();
 
                 // Perform the draft.
                 DoDraft(false, "Pilot");
@@ -403,7 +471,7 @@ namespace DraftTwitchViewers
             if (GUILayout.Button("Draft an Engineer", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
+                DraftManager.Instance.channel = DraftManager.Instance.channel.ToLower();
 
                 // Perform the draft.
                 DoDraft(false, "Engineer");
@@ -413,7 +481,7 @@ namespace DraftTwitchViewers
             if (GUILayout.Button("Draft a Scientist", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
+                DraftManager.Instance.channel = DraftManager.Instance.channel.ToLower();
 
                 // Perform the draft.
                 DoDraft(false, "Scientist");
@@ -423,7 +491,7 @@ namespace DraftTwitchViewers
             if (GUILayout.Button("Draft Any Viewer", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
+                DraftManager.Instance.channel = DraftManager.Instance.channel.ToLower();
 
                 // Perform the draft.
                 DoDraft(false);
@@ -436,7 +504,7 @@ namespace DraftTwitchViewers
             if (GUILayout.Button("Do a Viewer Drawing", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                DraftManager.Instance.Channel = DraftManager.Instance.Channel.ToLower();
+                DraftManager.Instance.channel = DraftManager.Instance.channel.ToLower();
 
                 // Perform the draft.
                 DoDraft(true);
@@ -465,19 +533,22 @@ namespace DraftTwitchViewers
             }
             if (isCustomizing)
             {
+                // Use hotkey toggle.
+                UseHotkey = GUILayout.Toggle(UseHotkey, "Quick Draft Hotkey", HighLogic.Skin.toggle);
+
+                // Add drafted to craft toggle.
+                AddToCraft = GUILayout.Toggle(AddToCraft, "Add drafted Kerbals to craft (Preflight Only)", HighLogic.Skin.toggle);
+
                 // Add "Kerman" toggle.
                 DraftManager.Instance.AddKerman = GUILayout.Toggle(DraftManager.Instance.AddKerman, "Add \"Kerman\" to names", HighLogic.Skin.toggle);
 
-                // Add drafted to craft toggle.
-                addToCraft = GUILayout.Toggle(addToCraft, "Add drafted Kerbals to craft (Preflight Only)", HighLogic.Skin.toggle);
-
                 // On successful draft.
                 GUILayout.Label("Successful Draft:", HighLogic.Skin.label);
-                draftMessage = GUILayout.TextField(draftMessage, HighLogic.Skin.textField);
+                DraftMessage = GUILayout.TextField(DraftMessage, HighLogic.Skin.textField);
 
                 // On successful draw.
                 GUILayout.Label("Successful Drawing:", HighLogic.Skin.label);
-                drawMessage = GUILayout.TextField(drawMessage, HighLogic.Skin.textField);
+                DrawMessage = GUILayout.TextField(DrawMessage, HighLogic.Skin.textField);
 
                 // $user Explanation
                 GUILayout.Label("", HighLogic.Skin.label);
@@ -672,6 +743,9 @@ namespace DraftTwitchViewers
                     // Create a new DRAFT node to write to.
                     draftSettings = globalSettings.AddNode("DRAFT");
                 }
+
+                // Write the useHotkey setting to it.
+                if (draftSettings.HasValue("useHotkey")) { draftSettings.SetValue("useHotkey", useHotkey.ToString()); } else { draftSettings.AddValue("useHotkey", useHotkey.ToString()); }
 
                 // Write the addToCraft setting to it.
                 if (draftSettings.HasValue("addToCraft")) { draftSettings.SetValue("addToCraft", addToCraft.ToString()); } else { draftSettings.AddValue("addToCraft", addToCraft.ToString()); }

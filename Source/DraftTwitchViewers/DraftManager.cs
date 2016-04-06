@@ -44,11 +44,11 @@ namespace DraftTwitchViewers
         /// <summary>
         /// The twitch channel.
         /// </summary>
-        public string Channel = "";
+        public string channel = "";
         /// <summary>
         /// Add "Kerman" to every name?
         /// </summary>
-        public bool AddKerman = true;
+        private bool addKerman = true;
         /// <summary>
         /// The list of mods in chat which shouldn't be drafted.
         /// </summary>
@@ -75,6 +75,40 @@ namespace DraftTwitchViewers
         /// The last known GameScene. Used to determine whether or not to load local settings.
         /// </summary>
         private GameScenes lastKnownScene = GameScenes.MAINMENU;
+        /// <summary>
+        /// Has something changed that we need to save?
+        /// </summary>
+        private bool needSave = false;
+        /// <summary>
+        /// The current delay time for saving.
+        /// </summary>
+        private float currentSaveDelay = 1f;
+        /// <summary>
+        /// The max delay time for saving.
+        /// </summary>
+        private const float maxSaveDelay = 1f;
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// AddKerman property. Triggers autosave when changed.
+        /// </summary>
+        public bool AddKerman
+        {
+            get { return addKerman; }
+            set { if (addKerman != value) { addKerman = value; SaveGlobalSettings(); } }
+        }
+
+        /// <summary>
+        /// Channel property. Triggers autosave (after delay) when changed.
+        /// </summary>
+        public string Channel
+        {
+            get { return channel; }
+            set { if (channel != value) { channel = value; needSave = true; currentSaveDelay = 0f; } }
+        }
 
         #endregion
 
@@ -112,8 +146,8 @@ namespace DraftTwitchViewers
                 if (draftSettings != null)
                 {
                     // Get the global settings.
-                    if (draftSettings.HasValue("channel")) { Channel = draftSettings.GetValue("channel"); }
-                    if (draftSettings.HasValue("addKerman")) { try { AddKerman = bool.Parse(draftSettings.GetValue("addKerman")); } catch { } }
+                    if (draftSettings.HasValue("channel")) { channel = draftSettings.GetValue("channel"); }
+                    if (draftSettings.HasValue("addKerman")) { try { addKerman = bool.Parse(draftSettings.GetValue("addKerman")); } catch { } }
                 }
                 // If the DRAFT node doesn't exist,
                 else
@@ -232,6 +266,24 @@ namespace DraftTwitchViewers
             InitRegexes();
         }
 
+        /// <summary>
+        /// Called when the MonoBehaviour is updated.
+        /// </summary>
+        void Update()
+        {
+            // Update the save delay if needed.
+            if (currentSaveDelay < maxSaveDelay)
+            {
+                currentSaveDelay += Time.deltaTime;
+            }
+            // Save if the delay has been reached.
+            else if (needSave)
+            {
+                SaveGlobalSettings();
+                needSave = false;
+            }
+        }
+
         #endregion
 
         #region Draft function
@@ -247,7 +299,7 @@ namespace DraftTwitchViewers
         public static IEnumerator DraftKerbal(Action<string> success, Action<string> failure, bool forDrawing, bool suppressSave, string job = "Any")
         {
             // If a channel hasn't been input yet,
-            if (string.IsNullOrEmpty(instance.Channel))
+            if (string.IsNullOrEmpty(instance.channel))
             {
                 // Invoke failure.
                 failure.Invoke("Please specify a channel!");
@@ -256,7 +308,7 @@ namespace DraftTwitchViewers
             else
             {
                 // Creates a new Unity web request (WWW) using the provided channel.
-                WWW getList = new WWW("http://tmi.twitch.tv/group/user/" + instance.Channel + "/chatters");
+                WWW getList = new WWW("http://tmi.twitch.tv/group/user/" + instance.channel + "/chatters");
 
                 // Waits for the web request to finish.
                 yield return getList;
@@ -413,7 +465,7 @@ namespace DraftTwitchViewers
 
                                     // Create a new Kerbal prototype and rename.
                                     ProtoCrewMember newKerbal = CrewGenerator.RandomCrewMemberPrototype(ProtoCrewMember.KerbalType.Crew);
-                                    newKerbal.name = realUsername + (instance.AddKerman ? " Kerman" : "");
+                                    newKerbal.name = realUsername + (instance.addKerman ? " Kerman" : "");
                                     KerbalRoster.SetExperienceTrait(newKerbal);
 
                                     // If the kerbal satisfies the job requirements, wait... We actually search for qualifications?
@@ -452,7 +504,7 @@ namespace DraftTwitchViewers
                             }
 
                             // Invoke the success Action, allowing the caller to continue.
-                            success.Invoke(realUsername + (instance.AddKerman ? " Kerman" : ""));
+                            success.Invoke(realUsername + (instance.addKerman ? " Kerman" : ""));
                         }
                         // Else, if we failed to find one,
                         else if (failedToFindOne)
@@ -502,8 +554,8 @@ namespace DraftTwitchViewers
                 }
 
                 // Write the Channel and AddKerman values to it.
-                if (draftSettings.HasValue("channel")) { draftSettings.SetValue("channel", Channel); } else { draftSettings.AddValue("channel", Channel); }
-                if (draftSettings.HasValue("addKerman")) { draftSettings.SetValue("addKerman", AddKerman.ToString()); } else { draftSettings.AddValue("addKerman", AddKerman.ToString()); }
+                if (draftSettings.HasValue("channel")) { draftSettings.SetValue("channel", channel); } else { draftSettings.AddValue("channel", channel); }
+                if (draftSettings.HasValue("addKerman")) { draftSettings.SetValue("addKerman", addKerman.ToString()); } else { draftSettings.AddValue("addKerman", addKerman.ToString()); }
 
                 // Get the list of bots to remove.
                 ConfigNode botSettings = globalSettings.GetNode("BOTS");
@@ -541,8 +593,8 @@ namespace DraftTwitchViewers
                 // Create a new DRAFT node to write the general settings to.
                 ConfigNode draftSettings = root.AddNode("DRAFT");
 
-                draftSettings.AddValue("channel", Channel);
-                draftSettings.AddValue("addKerman", AddKerman.ToString());
+                draftSettings.AddValue("channel", channel);
+                draftSettings.AddValue("addKerman", addKerman.ToString());
 
                 // Create a new BOTS node to write to.
                 ConfigNode botSettings = root.AddNode("BOTS");

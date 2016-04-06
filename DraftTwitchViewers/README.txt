@@ -30,7 +30,11 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 
 CHANGELOG:
 
-v2.3.1
+v2.3.2:
+- Made the Quick Draft hotkey togglable.
+- All settings except for the "Bots to Remove" list now autosave when changed.
+
+v2.3.1:
 - Incremented version info.
 
 v2.3:
