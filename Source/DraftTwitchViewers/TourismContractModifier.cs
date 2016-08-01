@@ -129,7 +129,7 @@ namespace DraftTwitchViewers
                             if (!working)
                             {
                                 // Begin a draft and indicate waiting status.
-                                StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
+                                StartCoroutine(ScenarioDraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
                                 working = true;
                             }
                         }
@@ -142,10 +142,10 @@ namespace DraftTwitchViewers
         /// Called when a draft succeeds.
         /// </summary>
         /// <param name="kerbalName">The name of the drafted viewer.</param>
-        void DraftSuccess(string kerbalName)
+        void DraftSuccess(DraftInfo info)
         {
             // Enqueue the name first thing, since it needs to be in the queue whether it has enough with it or not.
-            draftNames.Enqueue(kerbalName);
+            draftNames.Enqueue(info.name);
 
             // Resets failures. The addon should only destroy after 5 consecutive failures.
             failures = 0;
@@ -213,7 +213,7 @@ namespace DraftTwitchViewers
                 if (contractsToModify.Count > 0)
                 {
                     // Begin another draft.
-                    StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
+                    StartCoroutine(ScenarioDraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
                 }
                 // Else, the queue is empty.
                 else
@@ -225,7 +225,7 @@ namespace DraftTwitchViewers
             // Else, run another draft.
             else
             {
-                StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
+                StartCoroutine(ScenarioDraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
             }
         }
 
@@ -259,7 +259,7 @@ namespace DraftTwitchViewers
                 if (contractsToModify.Count > 0 && failures < 5)
                 {
                     // Retry the draft.
-                    StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
+                    StartCoroutine(ScenarioDraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
                 }
                 // Else, the queue is empty, or 5 failures have occurred.
                 else

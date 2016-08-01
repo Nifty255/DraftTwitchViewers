@@ -6,23 +6,27 @@ using UnityEngine;
 
 namespace DraftTwitchViewers
 {
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class DraftManager : MonoBehaviour
+    struct DraftInfo
+    {
+        public string name;
+        public string job;
+
+        public DraftInfo(string name, string job = "Any")
+        {
+            this.name = name;
+            this.job = job;
+        }
+    }
+
+    [KSPScenario(ScenarioCreationOptions.AddToAllGames, new GameScenes[] { GameScenes.SPACECENTER, GameScenes.EDITOR, GameScenes.FLIGHT })]
+    class ScenarioDraftManager : ScenarioModule
     {
         #region Instance
 
         /// <summary>
-        /// The instance of this class.
-        /// </summary>
-        private static DraftManager instance;
-
-        /// <summary>
         /// The public instance of this class.
         /// </summary>
-        public static DraftManager Instance
-        {
-            get { return instance; }
-        }
+        public static ScenarioDraftManager Instance { get; private set; }
 
         #endregion
 
@@ -32,10 +36,6 @@ namespace DraftTwitchViewers
         /// The settings save location.
         /// </summary>
         private string settingsLocation = "GameData/DraftTwitchViewers/";
-        /// <summary>
-        /// The individual game save location.
-        /// </summary>
-        private string saveLocation = "";
 
         #endregion
 
@@ -70,11 +70,7 @@ namespace DraftTwitchViewers
         #endregion
 
         #region Misc Variables
-
-        /// <summary>
-        /// The last known GameScene. Used to determine whether or not to load local settings.
-        /// </summary>
-        private GameScenes lastKnownScene = GameScenes.MAINMENU;
+        
         /// <summary>
         /// Has something changed that we need to save?
         /// </summary>
@@ -117,153 +113,154 @@ namespace DraftTwitchViewers
         /// <summary>
         /// Called when the MonoBehaviour is first created.
         /// </summary>
-        void Awake()
+        public override void OnAwake()
         {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-
-            #region Global Settings Load
-
-            // Create an empty bot list.
-            BotsToRemove = new List<string>();
-            // Create an empty drawing list.
-            DrawnUsers = new List<string>();
-
-            // Load global settings.
-            ConfigNode globalSettings = ConfigNode.Load(settingsLocation + "GlobalSettings.cfg");
-            // If the file exists,
-            if (globalSettings != null)
+            if (!Instance)
             {
-                // Used to save if any corrupt nodes were found.
-                bool doSave = false;
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
 
-                #region Draft Settings Load
+                #region Global Settings Load
 
-                // Get the DRAFT node.
-                ConfigNode draftSettings = globalSettings.GetNode("DRAFT");
+                // Create an empty bot list.
+                BotsToRemove = new List<string>();
+                // Create an empty drawing list.
+                DrawnUsers = new List<string>();
 
-                // If the DRAFT node exists,
-                if (draftSettings != null)
+                // Load global settings.
+                ConfigNode globalSettings = ConfigNode.Load(settingsLocation + "GlobalSettings.cfg");
+                // If the file exists,
+                if (globalSettings != null)
                 {
-                    // Get the global settings.
-                    if (draftSettings.HasValue("channel")) { channel = draftSettings.GetValue("channel"); }
-                    if (draftSettings.HasValue("addKerman")) { try { addKerman = bool.Parse(draftSettings.GetValue("addKerman")); } catch { } }
-                }
-                // If the DRAFT node doesn't exist,
-                else
-                {
-                    // Log a warning that is wasn't found.
-                    Logger.DebugWarning("GlobalSettings.cfg WAS found, but the DRAFT node was not. Using defaults.");
-                }
+                    // Used to save if any corrupt nodes were found.
+                    bool doSave = false;
 
-                #endregion
+                    #region Draft Settings Load
 
-                #region Bot Settings Load
+                    // Get the DRAFT node.
+                    ConfigNode draftSettings = globalSettings.GetNode("DRAFT");
 
-                // Get the list of bots to remove from drafts and drawings.
-                ConfigNode botsSettings = globalSettings.GetNode("BOTS");
-
-                // If the BOTS node exists,
-                if (botsSettings != null)
-                {
-                    // Get a list of BOT nodes.
-                    ConfigNode[] botNodes = botsSettings.GetNodes("BOT");
-
-                    // Iterate through,
-                    foreach (ConfigNode c in botNodes)
+                    // If the DRAFT node exists,
+                    if (draftSettings != null)
                     {
-                        // If the node has a name value,
-                        if (c.HasValue("name"))
+                        // Get the global settings.
+                        if (draftSettings.HasValue("channel")) { channel = draftSettings.GetValue("channel"); }
+                        if (draftSettings.HasValue("addKerman")) { try { addKerman = bool.Parse(draftSettings.GetValue("addKerman")); } catch { } }
+                    }
+                    // If the DRAFT node doesn't exist,
+                    else
+                    {
+                        // Log a warning that is wasn't found.
+                        Logger.DebugWarning("GlobalSettings.cfg WAS found, but the DRAFT node was not. Using defaults.");
+                    }
+
+                    #endregion
+
+                    #region Bot Settings Load
+
+                    // Get the list of bots to remove from drafts and drawings.
+                    ConfigNode botsSettings = globalSettings.GetNode("BOTS");
+
+                    // If the BOTS node exists,
+                    if (botsSettings != null)
+                    {
+                        // Get a list of BOT nodes.
+                        ConfigNode[] botNodes = botsSettings.GetNodes("BOT");
+
+                        // Iterate through,
+                        foreach (ConfigNode c in botNodes)
                         {
-                            // Add the string name to the list of bots to remove.
-                            BotsToRemove.Add(c.GetValue("name"));
-                        }
-                        // If the node doesn't have a name value,
-                        else
-                        {
-                            // Log a warning that this node is corrupt and is being removed.
-                            Logger.DebugWarning("Corrupt BOT node. Removing.");
-                            // Remove the corrupt node.
-                            botsSettings.RemoveNode(c);
-                            // Set doSave to true so the corrupt nodes remain gone.
-                            doSave = true;
+                            // If the node has a name value,
+                            if (c.HasValue("name"))
+                            {
+                                // Add the string name to the list of bots to remove.
+                                BotsToRemove.Add(c.GetValue("name"));
+                            }
+                            // If the node doesn't have a name value,
+                            else
+                            {
+                                // Log a warning that this node is corrupt and is being removed.
+                                Logger.DebugWarning("Corrupt BOT node. Removing.");
+                                // Remove the corrupt node.
+                                botsSettings.RemoveNode(c);
+                                // Set doSave to true so the corrupt nodes remain gone.
+                                doSave = true;
+                            }
                         }
                     }
-                }
-                // If the BOTS node doesn't exist,
-                else
-                {
-                    // Log a warning that is wasn't found.
-                    Logger.DebugWarning("GlobalSettings.cfg WAS found, but the BOTS node was not. Using empty list.");
-                }
-
-                #endregion
-
-                #region Drawing Settings Load
-
-                // Get the list of users which have already won a drawing.
-                ConfigNode drawnSettings = globalSettings.GetNode("DRAWN");
-
-                // If the DRAWN node exists,
-                if (drawnSettings != null)
-                {
-                    // Get a list of USER nodes.
-                    ConfigNode[] drawnNodes = drawnSettings.GetNodes("USER");
-
-                    // Iterate through,
-                    foreach (ConfigNode c in drawnNodes)
+                    // If the BOTS node doesn't exist,
+                    else
                     {
-                        // If the node has a name value,
-                        if (c.HasValue("name"))
+                        // Log a warning that is wasn't found.
+                        Logger.DebugWarning("GlobalSettings.cfg WAS found, but the BOTS node was not. Using empty list.");
+                    }
+
+                    #endregion
+
+                    #region Drawing Settings Load
+
+                    // Get the list of users which have already won a drawing.
+                    ConfigNode drawnSettings = globalSettings.GetNode("DRAWN");
+
+                    // If the DRAWN node exists,
+                    if (drawnSettings != null)
+                    {
+                        // Get a list of USER nodes.
+                        ConfigNode[] drawnNodes = drawnSettings.GetNodes("USER");
+
+                        // Iterate through,
+                        foreach (ConfigNode c in drawnNodes)
                         {
-                            // Add the string name to the list of drawn users.
-                            DrawnUsers.Add(c.GetValue("name"));
-                        }
-                        // If the node doesn't have a name value,
-                        else
-                        {
-                            // Log a warning that this node is corrupt and is being removed.
-                            Logger.DebugWarning("Corrupt DRAWN.USER node. Removing.");
-                            // Remove the corrupt node.
-                            drawnSettings.RemoveNode(c);
-                            // Set doSave to true so the corrupt nodes remain gone.
-                            doSave = true;
+                            // If the node has a name value,
+                            if (c.HasValue("name"))
+                            {
+                                // Add the string name to the list of drawn users.
+                                DrawnUsers.Add(c.GetValue("name"));
+                            }
+                            // If the node doesn't have a name value,
+                            else
+                            {
+                                // Log a warning that this node is corrupt and is being removed.
+                                Logger.DebugWarning("Corrupt DRAWN.USER node. Removing.");
+                                // Remove the corrupt node.
+                                drawnSettings.RemoveNode(c);
+                                // Set doSave to true so the corrupt nodes remain gone.
+                                doSave = true;
+                            }
                         }
                     }
+                    // If the DRAWN node doesn't exist,
+                    else
+                    {
+                        // Log a warning that is wasn't found.
+                        Logger.DebugWarning("GlobalSettings.cfg WAS found, but the DRAWN node was not. Using empty list.");
+                    }
+
+                    #endregion
+
+                    // If corrupt nodes were found and removed,
+                    if (doSave)
+                    {
+                        // Save the settings file so they remain gone.
+                        globalSettings.Save(settingsLocation + "GlobalSettings.cfg");
+                    }
                 }
-                // If the DRAWN node doesn't exist,
+                // If the file doesn't exist,
                 else
                 {
-                    // Log a warning that is wasn't found.
-                    Logger.DebugWarning("GlobalSettings.cfg WAS found, but the DRAWN node was not. Using empty list.");
+                    // Log a warning that it wasn't found.
+                    Logger.DebugWarning("GlobalSettings.cfg wasn't found. Using defaults.");
                 }
 
                 #endregion
 
-                // If corrupt nodes were found and removed,
-                if (doSave)
-                {
-                    // Save the settings file so they remain gone.
-                    globalSettings.Save(settingsLocation + "GlobalSettings.cfg");
-                }
+                // Initialize the regex array.
+                InitRegexes();
             }
-            // If the file doesn't exist,
             else
             {
-                // Log a warning that it wasn't found.
-                Logger.DebugWarning("GlobalSettings.cfg wasn't found. Using defaults.");
+                Destroy(gameObject);
             }
-
-            #endregion
-
-            // Preload this list (which will be populated when local settings are loaded) to avoid errors.
-            AlreadyDrafted = new List<string>();
-
-            // Register for scene changes.
-            GameEvents.onGameSceneLoadRequested.Add(ClearLocalSettings);
-
-            // Initialize the regex array.
-            InitRegexes();
         }
 
         /// <summary>
@@ -286,6 +283,135 @@ namespace DraftTwitchViewers
 
         #endregion
 
+        #region KSP Functions
+
+        public override void OnLoad(ConfigNode node)
+        {
+            #region Local
+
+            AlreadyDrafted = new List<string>();
+
+            // Get the DRAFTED node.
+            ConfigNode draftedNode = node.GetNode("DRAFTED");
+
+            // If the DRAFTED node exists,
+            if (draftedNode != null)
+            {
+                // Get a list of USER nodes.
+                ConfigNode[] draftNodes = draftedNode.GetNodes("USER");
+
+                // Iterate through,
+                foreach (ConfigNode c in draftNodes)
+                {
+                    // If the node has a name value,
+                    if (c.HasValue("name"))
+                    {
+                        // Add the string name to the list of users already drafted.
+                        AlreadyDrafted.Add(c.GetValue("name"));
+                    }
+                }
+            }
+            // If the DRAFTED node doesn't exist,
+            else
+            {
+                // Log a warning that is wasn't found.
+                Logger.DebugWarning("DRAFTED node not found. Using empty list.");
+            }
+
+            LegacyLoadLocalSettings();
+
+            #endregion
+        }
+
+        public override void OnSave(ConfigNode node)
+        {
+            SaveGlobalSettings();
+
+            #region Local
+
+            if (node.HasNode("DRAFTED"))
+            {
+                node.RemoveNode("DRAFTED");
+            }
+
+            ConfigNode draftedNode = node.AddNode(new ConfigNode("DRAFTED"));
+
+            foreach (string name in AlreadyDrafted)
+            {
+                ConfigNode discoveryNode = draftedNode.AddNode(new ConfigNode("USER"));
+
+                discoveryNode.AddValue("name", name);
+            }
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Loads local settings.
+        /// </summary>
+        public void LegacyLoadLocalSettings()
+        {
+            // Set the save location.
+            string saveLocation = "saves/" + HighLogic.CurrentGame.Title.Substring(0, HighLogic.CurrentGame.Title.LastIndexOf(' ')) + "/";
+
+            // Load local settings.
+            ConfigNode localSettings = ConfigNode.Load(saveLocation + "DTVLocalSettings.cfg");
+            // If the file exists,
+            if (localSettings != null)
+            {
+                // Used to save if any corrupt nodes were found.
+                bool doSave = false;
+
+                #region Drafted Users Load
+                // Get the DRAFTED node.
+                ConfigNode draftedUsers = localSettings.GetNode("DRAFTED");
+
+                // If the DRAFTED node exists,
+                if (draftedUsers != null)
+                {
+                    // The legacy save was found. Load it and remove it.
+                    Logger.DebugWarning("Legacy file \"DTVLocalSettings.cfg\" was found. Loading and deleting.");
+
+                    // Get a list of USER nodes.
+                    ConfigNode[] userNodes = draftedUsers.GetNodes("USER");
+
+                    // Iterate through,
+                    foreach (ConfigNode c in userNodes)
+                    {
+                        // If the node has a name value,
+                        if (c.HasValue("name"))
+                        {
+                            // Add the string name to the list of users already drafted.
+                            AlreadyDrafted.Add(c.GetValue("name"));
+                        }
+                        // If the node doesn't have a name value,
+                        else
+                        {
+                            // Log a warning that this node is corrupt and is being removed.
+                            Logger.DebugWarning("Corrupt USER node. Removing.");
+                            // Remove the corrupt node.
+                            draftedUsers.RemoveNode(c);
+                            // Set doSave to true so the corrupt nodes remain gone.
+                            doSave = true;
+                        }
+                    }
+
+                    localSettings.RemoveNode(draftedUsers);
+                    doSave = true;
+                }
+                #endregion
+
+                // If corrupt nodes were found and removed,
+                if (doSave)
+                {
+                    // Save the settings file so they remain gone.
+                    localSettings.Save(saveLocation + "DTVLocalSettings.cfg");
+                }
+            }
+        }
+
+        #endregion
+
         #region Draft function
 
         /// <summary>
@@ -296,10 +422,10 @@ namespace DraftTwitchViewers
         /// <param name="forDrawing">Whether the draft is for a drawing, or for an actual draft.</param>
         /// <param name="job">The job for the Kerbal. Optional and defaults to "Any" and is not needed if forDrawing is true.</param>
         /// <returns>The IEnumerator (used for making the draft asynchronously).</returns>
-        public static IEnumerator DraftKerbal(Action<string> success, Action<string> failure, bool forDrawing, bool suppressSave, string job = "Any")
+        public static IEnumerator DraftKerbal(Action<DraftInfo> success, Action<string> failure, bool forDrawing, bool suppressSave, string job = "Any")
         {
             // If a channel hasn't been input yet,
-            if (string.IsNullOrEmpty(instance.channel))
+            if (string.IsNullOrEmpty(Instance.channel))
             {
                 // Invoke failure.
                 failure.Invoke("Please specify a channel!");
@@ -308,7 +434,7 @@ namespace DraftTwitchViewers
             else
             {
                 // Creates a new Unity web request (WWW) using the provided channel.
-                WWW getList = new WWW("http://tmi.twitch.tv/group/user/" + instance.channel + "/chatters");
+                WWW getList = new WWW("http://tmi.twitch.tv/group/user/" + Instance.channel + "/chatters");
 
                 // Waits for the web request to finish.
                 yield return getList;
@@ -318,14 +444,14 @@ namespace DraftTwitchViewers
                 {
                     // Parse the result into a list of users, still lowercased.
                     List<string> usersInChat = new List<string>();
-                    usersInChat.AddRange(instance.ParseIntoNameArray(getList.text, "moderators"));
-                    usersInChat.AddRange(instance.ParseIntoNameArray(getList.text, "staff"));
-                    usersInChat.AddRange(instance.ParseIntoNameArray(getList.text, "admins"));
-                    usersInChat.AddRange(instance.ParseIntoNameArray(getList.text, "global_mods"));
-                    usersInChat.AddRange(instance.ParseIntoNameArray(getList.text, "viewers"));
+                    usersInChat.AddRange(Instance.ParseIntoNameArray(getList.text, "moderators"));
+                    usersInChat.AddRange(Instance.ParseIntoNameArray(getList.text, "staff"));
+                    usersInChat.AddRange(Instance.ParseIntoNameArray(getList.text, "admins"));
+                    usersInChat.AddRange(Instance.ParseIntoNameArray(getList.text, "global_mods"));
+                    usersInChat.AddRange(Instance.ParseIntoNameArray(getList.text, "viewers"));
 
                     // Remove any bots present.
-                    foreach (string bot in instance.BotsToRemove)
+                    foreach (string bot in Instance.BotsToRemove)
                     {
                         usersInChat.Remove(bot);
                     }
@@ -334,7 +460,7 @@ namespace DraftTwitchViewers
                     if (forDrawing)
                     {
                         // Remove any users who were already drafted.
-                        foreach (string drawn in instance.DrawnUsers)
+                        foreach (string drawn in Instance.DrawnUsers)
                         {
                             usersInChat.Remove(drawn);
                         }
@@ -342,7 +468,7 @@ namespace DraftTwitchViewers
                     else
                     {
                         // Remove any users who were already drafted.
-                        foreach (string drafted in instance.AlreadyDrafted)
+                        foreach (string drafted in Instance.AlreadyDrafted)
                         {
                             usersInChat.Remove(drafted);
                         }
@@ -352,7 +478,7 @@ namespace DraftTwitchViewers
                     List<string> toRemove = new List<string>();
 
                     // Iterate through the regexes.
-                    foreach (Regex r in instance.regexes)
+                    foreach (Regex r in Instance.regexes)
                     {
                         // Iterate through each username per regex.
                         foreach (string u in usersInChat)
@@ -404,12 +530,12 @@ namespace DraftTwitchViewers
                                 if (!suppressSave)
                                 {
                                     // Save the new user in the drawing file.
-                                    instance.DrawnUsers.Add(userDrawn);
-                                    instance.SaveDrawn();
+                                    Instance.DrawnUsers.Add(userDrawn);
+                                    Instance.SaveDrawn();
                                 }
 
                                 // Invoke the success Action, allowing the caller to continue.
-                                success.Invoke(realUsername);
+                                success.Invoke(new DraftInfo(realUsername));
                             }
                             // If there is an error,
                             else
@@ -430,6 +556,14 @@ namespace DraftTwitchViewers
                         // Set up Kerbal data variables.
                         string oddUsername = null;
                         string realUsername = null;
+                        string realJob = job;
+
+                        // Randomize the job if none was specified.
+                        if (realJob == "Any")
+                        {
+                            int randomJob = UnityEngine.Random.Range(0, 3);
+                            realJob = (randomJob == 0 ? "Pilot" : (randomJob == 1 ? "Engineer" : "Scientist"));
+                        }
 
                         // Perform the search loop at least once, and repeat until success or failure.
                         do
@@ -463,24 +597,8 @@ namespace DraftTwitchViewers
                                     realUsername = realUsername.Substring(realUsername.IndexOf(":") + 2);
                                     realUsername = realUsername.Substring(0, realUsername.IndexOf(",") - 1);
 
-                                    // Create a new Kerbal prototype and rename.
-                                    ProtoCrewMember newKerbal = CrewGenerator.RandomCrewMemberPrototype(ProtoCrewMember.KerbalType.Crew);
-                                    newKerbal.name = realUsername + (instance.addKerman ? " Kerman" : "");
-                                    KerbalRoster.SetExperienceTrait(newKerbal);
-
-                                    // If the kerbal satisfies the job requirements, wait... We actually search for qualifications?
-                                    if (job == "Any" || newKerbal.experienceTrait.Title == job)
-                                    {
-                                        // We found a proper Kerbal, so we can exit the loop.
-                                        oddUsername = userDrafted;
-                                        foundProperKerbal = true;
-                                    }
-                                    // Otherwise,
-                                    else
-                                    {
-                                        // The Kerbal lacks the required job. Remove them from the list and go again.
-                                        usersInChat.Remove(userDrafted);
-                                    }
+                                    oddUsername = userDrafted;
+                                    foundProperKerbal = true;
                                 }
                                 // If there is an error,
                                 else
@@ -499,12 +617,11 @@ namespace DraftTwitchViewers
                             if (!suppressSave)
                             {
                                 // Save the new user in the drawing file.
-                                instance.AlreadyDrafted.Add(oddUsername);
-                                instance.SaveDrafted();
+                                Instance.AlreadyDrafted.Add(oddUsername);
                             }
 
                             // Invoke the success Action, allowing the caller to continue.
-                            success.Invoke(realUsername + (instance.addKerman ? " Kerman" : ""));
+                            success.Invoke(new DraftInfo(realUsername + (Instance.addKerman ? " Kerman" : ""), job));
                         }
                         // Else, if we failed to find one,
                         else if (failedToFindOne)
@@ -671,64 +788,6 @@ namespace DraftTwitchViewers
         }
 
         /// <summary>
-        /// Saves the list of drafted users.
-        /// </summary>
-        private void SaveDrafted()
-        {
-            // Load local settings.
-            ConfigNode localSettings = ConfigNode.Load(saveLocation + "DTVLocalSettings.cfg");
-            // If the file exists,
-            if (localSettings != null)
-            {
-                // Get the DRAFTED node.
-                ConfigNode draftedUsers = localSettings.GetNode("DRAFTED");
-
-                // If the DRAFTED node exists,
-                if (draftedUsers != null)
-                {
-                    // Remove it so it can be replaced.
-                    localSettings.RemoveNode(draftedUsers);
-                }
-
-                // Create a new DRAFTED node to write to.
-                draftedUsers = localSettings.AddNode("DRAFTED");
-
-                // For each user in the AlreadyDrafted list,
-                foreach (string drafted in AlreadyDrafted)
-                {
-                    // Create a new USER node and assign the username to it.
-                    ConfigNode draftedNode = draftedUsers.AddNode("USER");
-                    draftedNode.AddValue("name", drafted);
-                }
-
-                // Save the file.
-                localSettings.Save(saveLocation + "DTVLocalSettings.cfg");
-            }
-            // If the file doesn't exist,
-            else
-            {
-                // Log a warning that it wasn't found.
-                Logger.DebugWarning("(During save) DTVLocalSettings.cfg wasn't found. Generating to save drafted users.");
-
-                // Create a new root node.
-                ConfigNode root = new ConfigNode();
-                // Create a new DRAFTED node to write to.
-                ConfigNode draftedUsers = root.AddNode("DRAFTED");
-
-                // For each user in the AlreadyDrafted list,
-                foreach (string drafted in AlreadyDrafted)
-                {
-                    // Create a new USER node and assign the username to it.
-                    ConfigNode userNode = draftedUsers.AddNode("USER");
-                    userNode.AddValue("name", drafted);
-                }
-
-                // Save the file.
-                root.Save(saveLocation + "DTVLocalSettings.cfg");
-            }
-        }
-
-        /// <summary>
         /// Converts the specified Kerbal name back to a viewer username, and saves it.
         /// </summary>
         /// <param name="kerbalName">The Kerbal name.</param>
@@ -748,116 +807,7 @@ namespace DraftTwitchViewers
             newName = newName.ToLower();
 
             // Save the supressed name.
-            instance.AlreadyDrafted.Add(newName);
-            instance.SaveDrafted();
-        }
-
-        #endregion
-
-        #region Local Settings Handlers
-
-        /// <summary>
-        /// Clears local settings.
-        /// </summary>
-        /// <param name="data">The GameScene being requested.</param>
-        private void ClearLocalSettings(GameScenes data)
-        {
-            // If the GameScene is the Main Menu,
-            if (data == GameScenes.MAINMENU)
-            {
-                // The game is exiting to the main menu, discarding data local to any one save, so DTV should do the same.
-
-                // Log clearing.
-                Logger.DebugLog("Clearing Local Settings.");
-
-                // Clear the save location.
-                saveLocation = "";
-
-                // Clear Draft List.
-                AlreadyDrafted = new List<string>();
-
-                // Set last known scene to Main Menu.
-                lastKnownScene = GameScenes.MAINMENU;
-            }
-        }
-
-        /// <summary>
-        /// Loads local settings.
-        /// </summary>
-        public void LoadLocalSettings()
-        {
-            // If the last known GameScene is the Main Menu,
-            if (lastKnownScene == GameScenes.MAINMENU)
-            {
-                // The game has loaded into a game save, so it is safe to load this save's local settings.
-
-                // Set the save location.
-                saveLocation = "saves/" + HighLogic.CurrentGame.Title.Substring(0, HighLogic.CurrentGame.Title.LastIndexOf(' ')) + "/";
-
-                // Load local settings.
-                ConfigNode localSettings = ConfigNode.Load(saveLocation + "DTVLocalSettings.cfg");
-                // If the file exists,
-                if (localSettings != null)
-                {
-                    // Used to save if any corrupt nodes were found.
-                    bool doSave = false;
-
-                    #region Drafted Users Load
-                    // Get the DRAFTED node.
-                    ConfigNode draftedUsers = localSettings.GetNode("DRAFTED");
-
-                    // If the DRAFTED node exists,
-                    if (draftedUsers != null)
-                    {
-                        // Get a list of USER nodes.
-                        ConfigNode[] userNodes = draftedUsers.GetNodes("USER");
-
-                        // Iterate through,
-                        foreach (ConfigNode c in userNodes)
-                        {
-                            // If the node has a name value,
-                            if (c.HasValue("name"))
-                            {
-                                // Add the string name to the list of users already drafted.
-                                AlreadyDrafted.Add(c.GetValue("name"));
-                            }
-                            // If the node doesn't have a name value,
-                            else
-                            {
-                                // Log a warning that this node is corrupt and is being removed.
-                                Logger.DebugWarning("Corrupt BOT node. Removing.");
-                                // Remove the corrupt node.
-                                draftedUsers.RemoveNode(c);
-                                // Set doSave to true so the corrupt nodes remain gone.
-                                doSave = true;
-                            }
-                        }
-                    }
-                    // If the DRAFTED node doesn't exist,
-                    else
-                    {
-                        // Log a warning that is wasn't found.
-                        Logger.DebugWarning("DTVLocalSettings.cfg WAS found, but the DRAFTED node was not. Using empty list.");
-                    }
-                    #endregion
-
-                    // If corrupt nodes were found and removed,
-                    if (doSave)
-                    {
-                        // Save the settings file so they remain gone.
-                        localSettings.Save(saveLocation + "DTVLocalSettings.cfg");
-                    }
-                }
-                // If the file doesn't exist,
-                else
-                {
-                    // Log a warning that it wasn't found.
-                    Logger.DebugWarning("DTVLocalSettings.cfg wasn't found. Using defaults.");
-                }
-
-                // Set last known scene to Space Center.
-                lastKnownScene = GameScenes.SPACECENTER;
-            }
+            Instance.AlreadyDrafted.Add(newName);
         }
 
         #endregion

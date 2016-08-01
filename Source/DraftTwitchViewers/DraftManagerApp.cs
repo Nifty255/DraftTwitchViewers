@@ -288,10 +288,10 @@ namespace DraftTwitchViewers
         /// </summary>
         void Update()
         {
-            if (UseHotkey && (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) && Input.GetKeyUp(KeyCode.D))
+            if (UseHotkey && (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) && Input.GetKeyUp(KeyCode.Insert))
             {
                 // Lowercase the channel.
-                DraftManager.Instance.channel = DraftManager.Instance.channel.ToLower();
+                ScenarioDraftManager.Instance.channel = ScenarioDraftManager.Instance.channel.ToLower();
 
                 // Perform the draft.
                 DoDraft(false);
@@ -441,12 +441,12 @@ namespace DraftTwitchViewers
             GUILayout.BeginVertical(HighLogic.Skin.box);
 
             // Show draft shortcut (Alt+D)
-            GUILayout.Label("Quick Draft: Alt+D (Toggle " + (UseHotkey ? "off" : "on") + " in Customize)", HighLogic.Skin.label);
+            GUILayout.Label("Quick Draft: Alt+Insert (Toggle " + (UseHotkey ? "off" : "on") + " in Customize)", HighLogic.Skin.label);
             GUILayout.Label("", HighLogic.Skin.label);
 
             // Channel
             GUILayout.Label("Channel (Lowercase):", HighLogic.Skin.label);
-            DraftManager.Instance.channel = GUILayout.TextField(DraftManager.Instance.channel, HighLogic.Skin.textField);
+            ScenarioDraftManager.Instance.channel = GUILayout.TextField(ScenarioDraftManager.Instance.channel, HighLogic.Skin.textField);
 
             //Spacer Label
             GUILayout.Label("", HighLogic.Skin.label);
@@ -461,7 +461,7 @@ namespace DraftTwitchViewers
             if (GUILayout.Button("Draft a Pilot", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                DraftManager.Instance.channel = DraftManager.Instance.channel.ToLower();
+                ScenarioDraftManager.Instance.channel = ScenarioDraftManager.Instance.channel.ToLower();
 
                 // Perform the draft.
                 DoDraft(false, "Pilot");
@@ -471,7 +471,7 @@ namespace DraftTwitchViewers
             if (GUILayout.Button("Draft an Engineer", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                DraftManager.Instance.channel = DraftManager.Instance.channel.ToLower();
+                ScenarioDraftManager.Instance.channel = ScenarioDraftManager.Instance.channel.ToLower();
 
                 // Perform the draft.
                 DoDraft(false, "Engineer");
@@ -481,7 +481,7 @@ namespace DraftTwitchViewers
             if (GUILayout.Button("Draft a Scientist", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                DraftManager.Instance.channel = DraftManager.Instance.channel.ToLower();
+                ScenarioDraftManager.Instance.channel = ScenarioDraftManager.Instance.channel.ToLower();
 
                 // Perform the draft.
                 DoDraft(false, "Scientist");
@@ -491,7 +491,7 @@ namespace DraftTwitchViewers
             if (GUILayout.Button("Draft Any Viewer", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                DraftManager.Instance.channel = DraftManager.Instance.channel.ToLower();
+                ScenarioDraftManager.Instance.channel = ScenarioDraftManager.Instance.channel.ToLower();
 
                 // Perform the draft.
                 DoDraft(false);
@@ -504,21 +504,21 @@ namespace DraftTwitchViewers
             if (GUILayout.Button("Do a Viewer Drawing", HighLogic.Skin.button))
             {
                 // Lowercase the channel.
-                DraftManager.Instance.channel = DraftManager.Instance.channel.ToLower();
+                ScenarioDraftManager.Instance.channel = ScenarioDraftManager.Instance.channel.ToLower();
 
                 // Perform the draft.
                 DoDraft(true);
             }
 
-            GUI.enabled = (DraftManager.Instance.DrawnUsers.Count > 0);
+            GUI.enabled = (ScenarioDraftManager.Instance.DrawnUsers.Count > 0);
 
             // Reset drawing list
-            if (GUILayout.Button((DraftManager.Instance.DrawnUsers.Count == 0 ? "Drawn User List Empty!" : "Empty Drawn User List"), HighLogic.Skin.button))
+            if (GUILayout.Button((ScenarioDraftManager.Instance.DrawnUsers.Count == 0 ? "Drawn User List Empty!" : "Empty Drawn User List"), HighLogic.Skin.button))
             {
                 // Empty the list.
-                DraftManager.Instance.DrawnUsers = new List<string>();
+                ScenarioDraftManager.Instance.DrawnUsers = new List<string>();
                 // Save the list.
-                DraftManager.Instance.SaveDrawn();
+                ScenarioDraftManager.Instance.SaveDrawn();
             }
 
             GUI.enabled = true;
@@ -540,7 +540,7 @@ namespace DraftTwitchViewers
                 AddToCraft = GUILayout.Toggle(AddToCraft, "Add drafted Kerbals to craft (Preflight Only)", HighLogic.Skin.toggle);
 
                 // Add "Kerman" toggle.
-                DraftManager.Instance.AddKerman = GUILayout.Toggle(DraftManager.Instance.AddKerman, "Add \"Kerman\" to names", HighLogic.Skin.toggle);
+                ScenarioDraftManager.Instance.AddKerman = GUILayout.Toggle(ScenarioDraftManager.Instance.AddKerman, "Add \"Kerman\" to names", HighLogic.Skin.toggle);
 
                 // On successful draft.
                 GUILayout.Label("Successful Draft:", HighLogic.Skin.label);
@@ -558,16 +558,16 @@ namespace DraftTwitchViewers
                 // Bots to remove
                 GUILayout.Label("", HighLogic.Skin.label);
                 GUILayout.Label("Bots to Remove (One per line, no commas):", HighLogic.Skin.label);
-                string botsString = string.Join("\n", DraftManager.Instance.BotsToRemove.ToArray());
+                string botsString = string.Join("\n", ScenarioDraftManager.Instance.BotsToRemove.ToArray());
                 botsString = GUILayout.TextArea(botsString, HighLogic.Skin.textArea);
-                DraftManager.Instance.BotsToRemove = new List<string>();
-                if (botsString != "") { DraftManager.Instance.BotsToRemove.AddRange(botsString.Split('\n')); }
+                ScenarioDraftManager.Instance.BotsToRemove = new List<string>();
+                if (botsString != "") { ScenarioDraftManager.Instance.BotsToRemove.AddRange(botsString.Split('\n')); }
 
                 // Save
                 if (GUILayout.Button("Save", HighLogic.Skin.button))
                 {
                     SaveSettings();
-                    DraftManager.Instance.SaveGlobalSettings();
+                    ScenarioDraftManager.Instance.SaveGlobalSettings();
                 }
             }
 
@@ -628,7 +628,7 @@ namespace DraftTwitchViewers
         private void DoDraft(bool forDrawing, string job = "Any")
         {
             SaveSettings();
-            DraftManager.Instance.SaveGlobalSettings();
+            ScenarioDraftManager.Instance.SaveGlobalSettings();
 
             // Shows the alert as working.
             alertShowing = true;
@@ -637,11 +637,11 @@ namespace DraftTwitchViewers
 
             if (forDrawing)
             {
-                StartCoroutine(DraftManager.DraftKerbal(DrawingSuccess, DraftFailure, forDrawing, false, job));
+                StartCoroutine(ScenarioDraftManager.DraftKerbal(DrawingSuccess, DraftFailure, forDrawing, false, job));
             }
             else
             {
-                StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, forDrawing, false, job));
+                StartCoroutine(ScenarioDraftManager.DraftKerbal(DraftSuccess, DraftFailure, forDrawing, false, job));
             }
         }
 
@@ -649,16 +649,16 @@ namespace DraftTwitchViewers
         /// Creates a new Kerbal based on the provided name.
         /// </summary>
         /// <param name="kerbalName">The name of the new Kerbal.</param>
-        private void DraftSuccess(string kerbalName)
+        private void DraftSuccess(DraftInfo info)
         {
             ProtoCrewMember newKerbal = HighLogic.CurrentGame.CrewRoster.GetNewKerbal();
-            newKerbal.name = kerbalName;
-            KerbalRoster.SetExperienceTrait(newKerbal);
+            newKerbal.name = info.name;
+            KerbalRoster.SetExperienceTrait(newKerbal, info.job);
 
             // If the game is career, subtract the cost of hiring.
             if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
             {
-                Funding.Instance.AddFunds(-(double)GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount()), TransactionReasons.CrewRecruited);
+                Funding.Instance.AddFunds(-GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount()), TransactionReasons.CrewRecruited);
             }
             // If the game mode is not Career, set the skill level to maximum possible.
             else
@@ -685,7 +685,7 @@ namespace DraftTwitchViewers
             else
             {
                 // Alert in-game.
-                alertingMsg = draftMessage.Replace("&user", kerbalName).Replace("&skill", newKerbal.experienceTrait.Title);
+                alertingMsg = draftMessage.Replace("&user", info.name).Replace("&skill", newKerbal.experienceTrait.Title);
                 draftBusy = false;
                 failedToDraft = false;
                 alertShowing = true;
@@ -698,10 +698,10 @@ namespace DraftTwitchViewers
         /// Displays the winner of the drawing.
         /// </summary>
         /// <param name="winner">The winner of the drawing.</param>
-        private void DrawingSuccess(string winner)
+        private void DrawingSuccess(DraftInfo info)
         {
             // Alert in-game.
-            alertingMsg = drawMessage.Replace("&user", winner);
+            alertingMsg = drawMessage.Replace("&user", info.name);
             draftBusy = false;
             failedToDraft = false;
             alertShowing = true;

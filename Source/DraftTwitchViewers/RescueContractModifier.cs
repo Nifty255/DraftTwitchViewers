@@ -123,7 +123,7 @@ namespace DraftTwitchViewers
                             if (!working)
                             {
                                 // Begin a draft and indicate waiting status.
-                                StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
+                                StartCoroutine(ScenarioDraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
                                 working = true;
                             }
                         }
@@ -136,7 +136,7 @@ namespace DraftTwitchViewers
         /// Called when a draft succeeds.
         /// </summary>
         /// <param name="kerbalName">The name of the drafted viewer.</param>
-        void DraftSuccess(string kerbalName)
+        void DraftSuccess(DraftInfo info)
         {
             // Resets failures. The addon should only destroy after 5 consecutive failures.
             failures = 0;
@@ -152,7 +152,7 @@ namespace DraftTwitchViewers
             string oldName = replacement.GetValue("kerbalName");
 
             // Replace the old name with the new.
-            replacement.SetValue("kerbalName", kerbalName);
+            replacement.SetValue("kerbalName", info.name);
 
             // For each PARAM node in the CONTRACT node,
             foreach (ConfigNode node in replacement.nodes)
@@ -165,23 +165,23 @@ namespace DraftTwitchViewers
                 {
                     case "AcquireCrew":
                         {
-                            node.SetValue("title", "Save " + kerbalName);
+                            node.SetValue("title", "Save " + info.name);
                             break;
                         }
                     case "AcquirePart":
                         {
-                            string firstName = kerbalName.Substring(0, kerbalName.IndexOf(' '));
+                            string firstName = info.name.Substring(0, info.name.IndexOf(' '));
                             node.SetValue("title", "Obtain " + firstName + "'s Scrap");
                             break;
                         }
                     case "RecoverKerbal":
                         {
-                            node.SetValue("title", "Recover " + kerbalName + " on Kerbin");
+                            node.SetValue("title", "Recover " + info.name + " on Kerbin");
                             break;
                         }
                     case "RecoverPart":
                         {
-                            string firstName = kerbalName.Substring(0, kerbalName.IndexOf(' '));
+                            string firstName = info.name.Substring(0, info.name.IndexOf(' '));
                             node.SetValue("title", "Recover " + firstName + "'s Scrap on Kerbin");
                             break;
                         }
@@ -199,17 +199,17 @@ namespace DraftTwitchViewers
             }
 
             // Add the custom parameter indicating DTV has modified this contract.
-            toMod.AddParameter((ContractParameter)new ModifiedByDTV());
+            toMod.AddParameter(new ModifiedByDTV());
             
             // Reload the contract.
             Contract.Load(toMod, replacement);
 
             // Get the old Kerbal and rename it.
             ProtoCrewMember toRename = HighLogic.CurrentGame.CrewRoster[oldName];
-            toRename.name = kerbalName;
+            toRename.name = info.name;
 
             // Logging.
-            Logger.DebugLog("Draft Success (" + contractsToModify.Count.ToString() + " contracts waiting): " + kerbalName);
+            Logger.DebugLog("Draft Success (" + contractsToModify.Count.ToString() + " contracts waiting): " + info.name);
 
             // Refresh the contract list by firing the onContractListChanged event.
             GameEvents.Contract.onContractsListChanged.Fire();
@@ -218,7 +218,7 @@ namespace DraftTwitchViewers
             if (contractsToModify.Count > 0)
             {
                 // Begin another draft.
-                StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
+                StartCoroutine(ScenarioDraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
             }
             // Else, the queue is empty.
             else
@@ -258,7 +258,7 @@ namespace DraftTwitchViewers
                 if (contractsToModify.Count > 0 && failures < 5)
                 {
                     // Retry the draft.
-                    StartCoroutine(DraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
+                    StartCoroutine(ScenarioDraftManager.DraftKerbal(DraftSuccess, DraftFailure, false, false, "Any"));
                 }
                 // Else, the queue is empty, or 5 failures have occurred.
                 else

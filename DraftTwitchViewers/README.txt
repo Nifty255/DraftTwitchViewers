@@ -30,6 +30,12 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 
 CHANGELOG:
 
+v2.4:
+- Drafts are now saved directly to each save's persistent file, allowing reverts to free drafted names.
+- An upgrade system was left in place which will migrate pre-existing drafts over to the new system.
+- Fixed drafting for specific jobs still yeilding Kerbals with random jobs.
+- Changed the Quick Draft hotkey to Alt+Insert.
+
 v2.3.2:
 - Made the Quick Draft hotkey togglable.
 - All settings except for the "Bots to Remove" list now autosave when changed.
