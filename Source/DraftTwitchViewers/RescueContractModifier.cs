@@ -136,7 +136,7 @@ namespace DraftTwitchViewers
         /// Called when a draft succeeds.
         /// </summary>
         /// <param name="kerbalName">The name of the drafted viewer.</param>
-        void DraftSuccess(DraftInfo info)
+        void DraftSuccess(Dictionary<string, string> info)
         {
             // Resets failures. The addon should only destroy after 5 consecutive failures.
             failures = 0;
@@ -152,7 +152,7 @@ namespace DraftTwitchViewers
             string oldName = replacement.GetValue("kerbalName");
 
             // Replace the old name with the new.
-            replacement.SetValue("kerbalName", info.name);
+            replacement.SetValue("kerbalName", info["name"]);
 
             // For each PARAM node in the CONTRACT node,
             foreach (ConfigNode node in replacement.nodes)
@@ -165,23 +165,23 @@ namespace DraftTwitchViewers
                 {
                     case "AcquireCrew":
                         {
-                            node.SetValue("title", "Save " + info.name);
+                            node.SetValue("title", "Save " + info["name"]);
                             break;
                         }
                     case "AcquirePart":
                         {
-                            string firstName = info.name.Substring(0, info.name.IndexOf(' '));
+                            string firstName = info["name"].Substring(0, info["name"].IndexOf(' '));
                             node.SetValue("title", "Obtain " + firstName + "'s Scrap");
                             break;
                         }
                     case "RecoverKerbal":
                         {
-                            node.SetValue("title", "Recover " + info.name + " on Kerbin");
+                            node.SetValue("title", "Recover " + info["name"] + " on Kerbin");
                             break;
                         }
                     case "RecoverPart":
                         {
-                            string firstName = info.name.Substring(0, info.name.IndexOf(' '));
+                            string firstName = info["name"].Substring(0, info["name"].IndexOf(' '));
                             node.SetValue("title", "Recover " + firstName + "'s Scrap on Kerbin");
                             break;
                         }
@@ -206,10 +206,10 @@ namespace DraftTwitchViewers
 
             // Get the old Kerbal and rename it.
             ProtoCrewMember toRename = HighLogic.CurrentGame.CrewRoster[oldName];
-            toRename.name = info.name;
+            toRename.name = info["name"];
 
             // Logging.
-            Logger.DebugLog("Draft Success (" + contractsToModify.Count.ToString() + " contracts waiting): " + info.name);
+            Logger.DebugLog("Draft Success (" + contractsToModify.Count.ToString() + " contracts waiting): " + info["name"]);
 
             // Refresh the contract list by firing the onContractListChanged event.
             GameEvents.Contract.onContractsListChanged.Fire();

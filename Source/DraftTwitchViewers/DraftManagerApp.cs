@@ -649,11 +649,11 @@ namespace DraftTwitchViewers
         /// Creates a new Kerbal based on the provided name.
         /// </summary>
         /// <param name="kerbalName">The name of the new Kerbal.</param>
-        private void DraftSuccess(DraftInfo info)
+        private void DraftSuccess(Dictionary<string, string> info)
         {
             ProtoCrewMember newKerbal = HighLogic.CurrentGame.CrewRoster.GetNewKerbal();
-            newKerbal.name = info.name;
-            KerbalRoster.SetExperienceTrait(newKerbal, info.job);
+            newKerbal.name = info["name"];
+            KerbalRoster.SetExperienceTrait(newKerbal, info["job"]);
 
             // If the game is career, subtract the cost of hiring.
             if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
@@ -685,7 +685,7 @@ namespace DraftTwitchViewers
             else
             {
                 // Alert in-game.
-                alertingMsg = draftMessage.Replace("&user", info.name).Replace("&skill", newKerbal.experienceTrait.Title);
+                alertingMsg = draftMessage.Replace("&user", info["name"]).Replace("&skill", newKerbal.experienceTrait.Title);
                 draftBusy = false;
                 failedToDraft = false;
                 alertShowing = true;
@@ -698,10 +698,10 @@ namespace DraftTwitchViewers
         /// Displays the winner of the drawing.
         /// </summary>
         /// <param name="winner">The winner of the drawing.</param>
-        private void DrawingSuccess(DraftInfo info)
+        private void DrawingSuccess(Dictionary<string, string> info)
         {
             // Alert in-game.
-            alertingMsg = drawMessage.Replace("&user", info.name);
+            alertingMsg = drawMessage.Replace("&user", info["winner"]);
             draftBusy = false;
             failedToDraft = false;
             alertShowing = true;

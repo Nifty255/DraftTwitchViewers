@@ -142,10 +142,10 @@ namespace DraftTwitchViewers
         /// Called when a draft succeeds.
         /// </summary>
         /// <param name="kerbalName">The name of the drafted viewer.</param>
-        void DraftSuccess(DraftInfo info)
+        void DraftSuccess(Dictionary<string, string> info)
         {
             // Enqueue the name first thing, since it needs to be in the queue whether it has enough with it or not.
-            draftNames.Enqueue(info.name);
+            draftNames.Enqueue(info["name"]);
 
             // Resets failures. The addon should only destroy after 5 consecutive failures.
             failures = 0;

@@ -30,6 +30,10 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 
 CHANGELOG:
 
+v2.4.1:
+- Modified DraftKerbal method to invoke success using a generic Dictionary instead of a specialized DraftInfo object.
+- ScenarioDraftManager now destroys itself when returning to the main menu (and reloads when entering another save) to prevent potential load/save issues.
+
 v2.4:
 - Drafts are now saved directly to each save's persistent file, allowing reverts to free drafted names.
 - An upgrade system was left in place which will migrate pre-existing drafts over to the new system.

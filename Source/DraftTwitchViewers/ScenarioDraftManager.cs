@@ -6,19 +6,10 @@ using UnityEngine;
 
 namespace DraftTwitchViewers
 {
-    struct DraftInfo
-    {
-        public string name;
-        public string job;
-
-        public DraftInfo(string name, string job = "Any")
-        {
-            this.name = name;
-            this.job = job;
-        }
-    }
-
-    [KSPScenario(ScenarioCreationOptions.AddToAllGames, new GameScenes[] { GameScenes.SPACECENTER, GameScenes.EDITOR, GameScenes.FLIGHT })]
+    /// <summary>
+    /// A KSP Scenario module which handles all draft functions, both internal and external.
+    /// </summary>
+    [KSPScenario(ScenarioCreationOptions.AddToAllGames, new GameScenes[] { GameScenes.SPACECENTER })]
     class ScenarioDraftManager : ScenarioModule
     {
         #region Instance
@@ -254,6 +245,9 @@ namespace DraftTwitchViewers
 
                 #endregion
 
+                // Destroy this instance if the Main Menu is loaded.
+                GameEvents.onGameSceneLoadRequested.Add(SceneRequested);
+
                 // Initialize the regex array.
                 InitRegexes();
             }
@@ -281,10 +275,19 @@ namespace DraftTwitchViewers
             }
         }
 
+        void OnDestroy()
+        {
+            Instance = null;
+        }
+
         #endregion
 
         #region KSP Functions
 
+        /// <summary>
+        /// Loads the local game settings for this scenario.
+        /// </summary>
+        /// <param name="node">The config node for this scenario.</param>
         public override void OnLoad(ConfigNode node)
         {
             #region Local
@@ -323,6 +326,10 @@ namespace DraftTwitchViewers
             #endregion
         }
 
+        /// <summary>
+        /// Saves the local game settings for this scenario.
+        /// </summary>
+        /// <param name="node">The config node for this scenario.</param>
         public override void OnSave(ConfigNode node)
         {
             SaveGlobalSettings();
@@ -410,6 +417,18 @@ namespace DraftTwitchViewers
             }
         }
 
+        /// <summary>
+        /// Destroys this instance if the requested scene is the Main Menu.
+        /// </summary>
+        /// <param name="requestedScene">The requested scene.</param>
+        void SceneRequested(GameScenes requestedScene)
+        {
+            if (requestedScene == GameScenes.MAINMENU)
+            {
+                Destroy(gameObject);
+            }
+        }
+
         #endregion
 
         #region Draft function
@@ -417,12 +436,13 @@ namespace DraftTwitchViewers
         /// <summary>
         /// Drafts a Kerbal, invoking the suplied success Action if the draft succeeds, or the failure Action if the draft fails.
         /// </summary>
-        /// <param name="success">The Action to invoke on draft success.</param>
-        /// <param name="failure">The Action to invoke on draft failure.</param>
+        /// <param name="success">The Action to invoke on draft success. Provides a dictionary which will contain a "winner" entry for drawings, or a "name" and "job" entry for drafts.</param>
+        /// <param name="failure">The Action to invoke on draft failure. Provides a string reason the draft failed.</param>
         /// <param name="forDrawing">Whether the draft is for a drawing, or for an actual draft.</param>
+        /// <param name="suppressSave">If true, the drafted user will not be saved.</param>
         /// <param name="job">The job for the Kerbal. Optional and defaults to "Any" and is not needed if forDrawing is true.</param>
         /// <returns>The IEnumerator (used for making the draft asynchronously).</returns>
-        public static IEnumerator DraftKerbal(Action<DraftInfo> success, Action<string> failure, bool forDrawing, bool suppressSave, string job = "Any")
+        public static IEnumerator DraftKerbal(Action<Dictionary<string, string>> success, Action<string> failure, bool forDrawing, bool suppressSave, string job = "Any")
         {
             // If a channel hasn't been input yet,
             if (string.IsNullOrEmpty(Instance.channel))
@@ -534,8 +554,11 @@ namespace DraftTwitchViewers
                                     Instance.SaveDrawn();
                                 }
 
+                                Dictionary<string, string> winner = new Dictionary<string, string>();
+                                winner.Add("winner", realUsername);
+
                                 // Invoke the success Action, allowing the caller to continue.
-                                success.Invoke(new DraftInfo(realUsername));
+                                success.Invoke(winner);
                             }
                             // If there is an error,
                             else
@@ -620,8 +643,13 @@ namespace DraftTwitchViewers
                                 Instance.AlreadyDrafted.Add(oddUsername);
                             }
 
+                            Dictionary<string, string> drafted = new Dictionary<string, string>();
+
+                            drafted.Add("name", realUsername + (Instance.addKerman ? " Kerman" : ""));
+                            drafted.Add("job", job);
+
                             // Invoke the success Action, allowing the caller to continue.
-                            success.Invoke(new DraftInfo(realUsername + (Instance.addKerman ? " Kerman" : ""), job));
+                            success.Invoke(drafted);
                         }
                         // Else, if we failed to find one,
                         else if (failedToFindOne)
