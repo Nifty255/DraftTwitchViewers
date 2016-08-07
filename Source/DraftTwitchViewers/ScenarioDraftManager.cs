@@ -9,7 +9,7 @@ namespace DraftTwitchViewers
     /// <summary>
     /// A KSP Scenario module which handles all draft functions, both internal and external.
     /// </summary>
-    [KSPScenario(ScenarioCreationOptions.AddToAllGames, new GameScenes[] { GameScenes.SPACECENTER })]
+    [KSPScenario(ScenarioCreationOptions.AddToAllGames, new GameScenes[] { GameScenes.SPACECENTER, GameScenes.FLIGHT, GameScenes.TRACKSTATION })]
     class ScenarioDraftManager : ScenarioModule
     {
         #region Instance
@@ -109,7 +109,6 @@ namespace DraftTwitchViewers
             if (!Instance)
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject);
 
                 #region Global Settings Load
 
@@ -245,15 +244,13 @@ namespace DraftTwitchViewers
 
                 #endregion
 
-                // Destroy this instance if the Main Menu is loaded.
-                GameEvents.onGameSceneLoadRequested.Add(SceneRequested);
-
                 // Initialize the regex array.
                 InitRegexes();
             }
             else
             {
-                Destroy(gameObject);
+                Logger.DebugWarning("ScenarioDraftManager instance still exists.");
+                DestroyImmediate(this);
             }
         }
 
@@ -277,7 +274,10 @@ namespace DraftTwitchViewers
 
         void OnDestroy()
         {
-            Instance = null;
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
 
         #endregion
@@ -414,18 +414,6 @@ namespace DraftTwitchViewers
                     // Save the settings file so they remain gone.
                     localSettings.Save(saveLocation + "DTVLocalSettings.cfg");
                 }
-            }
-        }
-
-        /// <summary>
-        /// Destroys this instance if the requested scene is the Main Menu.
-        /// </summary>
-        /// <param name="requestedScene">The requested scene.</param>
-        void SceneRequested(GameScenes requestedScene)
-        {
-            if (requestedScene == GameScenes.MAINMENU)
-            {
-                Destroy(gameObject);
             }
         }
 
