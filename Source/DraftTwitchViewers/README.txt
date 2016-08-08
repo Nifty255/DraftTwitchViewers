@@ -1,5 +1,5 @@
 ﻿Draft Twitch Viewers
-v2.4.2: Release
+v2.4.3: Release
 
 This software is provided "as-is" with no warranties.
 
@@ -29,6 +29,9 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 - Rescue your viewers or take them on tours with DTV modified Career Mode Contracts!
 
 CHANGELOG:
+
+v2.4.3:
+- Corrected career draft cost.
 
 v2.4.2:
 - Fixed bug which caused the draft app to blank out on the flight scene.

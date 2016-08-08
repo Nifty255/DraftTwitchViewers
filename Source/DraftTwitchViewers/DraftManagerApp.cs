@@ -454,7 +454,7 @@ namespace DraftTwitchViewers
             // If career, display the cost of next draft.
             if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
             {
-                GUILayout.Label("Next Draft: -" + (GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount() + 1)).ToString("N0") + " Funds", HighLogic.Skin.label);
+                GUILayout.Label("Next Draft: -" + (GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount())).ToString("N0") + " Funds", HighLogic.Skin.label);
             }
 
             // Draft a Viewer from Twitch, skipping viewers who aren't Pilots.
@@ -658,7 +658,7 @@ namespace DraftTwitchViewers
             // If the game is career, subtract the cost of hiring.
             if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
             {
-                Funding.Instance.AddFunds(-GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount()), TransactionReasons.CrewRecruited);
+                Funding.Instance.AddFunds(-GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount() - 1), TransactionReasons.CrewRecruited);
             }
             // If the game mode is not Career, set the skill level to maximum possible.
             else
