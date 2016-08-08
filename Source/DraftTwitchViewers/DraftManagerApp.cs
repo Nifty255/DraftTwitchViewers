@@ -641,7 +641,14 @@ namespace DraftTwitchViewers
             }
             else
             {
-                StartCoroutine(ScenarioDraftManager.DraftKerbal(DraftSuccess, DraftFailure, forDrawing, false, job));
+                if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER && !Funding.CanAfford(GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount())))
+                {
+                    DraftFailure("You can't afford this draft!");
+                }
+                else
+                {
+                    StartCoroutine(ScenarioDraftManager.DraftKerbal(DraftSuccess, DraftFailure, forDrawing, false, job));
+                }
             }
         }
 
