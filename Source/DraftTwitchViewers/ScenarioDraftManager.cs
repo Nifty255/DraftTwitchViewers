@@ -634,7 +634,7 @@ namespace DraftTwitchViewers
                             Dictionary<string, string> drafted = new Dictionary<string, string>();
 
                             drafted.Add("name", realUsername + (Instance.addKerman ? " Kerman" : ""));
-                            drafted.Add("job", job);
+                            drafted.Add("job", realJob);
 
                             // Invoke the success Action, allowing the caller to continue.
                             success.Invoke(drafted);

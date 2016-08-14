@@ -30,6 +30,9 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 
 CHANGELOG:
 
+v2.4.5:
+- Fixed bug with job setting.
+
 v2.4.4:
 - DTV now ensures the player can afford a draft in career mode.
 
