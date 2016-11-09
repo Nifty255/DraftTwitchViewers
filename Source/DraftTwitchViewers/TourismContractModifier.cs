@@ -194,7 +194,7 @@ namespace DraftTwitchViewers
 
                     // Get an old Kerbal and rename it.
                     ProtoCrewMember toRename = HighLogic.CurrentGame.CrewRoster[oldTourists[i]];
-                    toRename.name = newTourists[i];
+                    toRename.ChangeName(newTourists[i]);
                 }
 
                 // Add the custom parameter indicating DTV has modified this contract.

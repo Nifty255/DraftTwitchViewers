@@ -659,7 +659,7 @@ namespace DraftTwitchViewers
         private void DraftSuccess(Dictionary<string, string> info)
         {
             ProtoCrewMember newKerbal = HighLogic.CurrentGame.CrewRoster.GetNewKerbal();
-            newKerbal.name = info["name"];
+            newKerbal.ChangeName(info["name"]);
             KerbalRoster.SetExperienceTrait(newKerbal, info["job"]);
 
             // If the game is career, subtract the cost of hiring.

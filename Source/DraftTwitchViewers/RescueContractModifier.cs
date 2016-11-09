@@ -206,7 +206,7 @@ namespace DraftTwitchViewers
 
             // Get the old Kerbal and rename it.
             ProtoCrewMember toRename = HighLogic.CurrentGame.CrewRoster[oldName];
-            toRename.name = info["name"];
+            toRename.ChangeName(info["name"]);
 
             // Logging.
             Logger.DebugLog("Draft Success (" + contractsToModify.Count.ToString() + " contracts waiting): " + info["name"]);

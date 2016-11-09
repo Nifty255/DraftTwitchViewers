@@ -74,6 +74,10 @@ namespace DraftTwitchViewers
         /// The max delay time for saving.
         /// </summary>
         private const float maxSaveDelay = 1f;
+        /// <summary>
+        /// The client ID string used to access the Twitch API.
+        /// </summary>
+        private const string clientID = "2gejhahzzkdfssseh8t64x6zkqmdvb0";
 
         #endregion
 
@@ -442,7 +446,7 @@ namespace DraftTwitchViewers
             else
             {
                 // Creates a new Unity web request (WWW) using the provided channel.
-                WWW getList = new WWW("http://tmi.twitch.tv/group/user/" + Instance.channel + "/chatters");
+                WWW getList = new WWW("http://tmi.twitch.tv/group/user/" + Instance.channel + "/chatters?client_id=" + clientID);
 
                 // Waits for the web request to finish.
                 yield return getList;
@@ -521,7 +525,7 @@ namespace DraftTwitchViewers
                             string userDrawn = usersInChat[UnityEngine.Random.Range(0, usersInChat.Count)];
 
                             // Creates a new Unity web request (WWW) using the user chosen.
-                            WWW getUser = new WWW("https://api.twitch.tv/kraken/users/" + userDrawn);
+                            WWW getUser = new WWW("https://api.twitch.tv/kraken/users/" + userDrawn + "/?client_id=" + clientID);
 
                             // Waits for the web request to finish.
                             yield return getUser;
@@ -595,7 +599,7 @@ namespace DraftTwitchViewers
                                 string userDrafted = usersInChat[UnityEngine.Random.Range(0, usersInChat.Count)];
 
                                 // Creates a new Unity web request (WWW) using the user chosen.
-                                WWW getUser = new WWW("https://api.twitch.tv/kraken/users/" + userDrafted);
+                                WWW getUser = new WWW("https://api.twitch.tv/kraken/users/" + userDrafted + "/?client_id=" + clientID);
 
                                 // Waits for the web request to finish.
                                 yield return getUser;
