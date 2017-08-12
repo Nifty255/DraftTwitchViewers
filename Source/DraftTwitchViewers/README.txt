@@ -1,5 +1,4 @@
 ﻿Draft Twitch Viewers
-v2.4.4: Release
 
 This software is provided "as-is" with no warranties.
 

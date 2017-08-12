@@ -7,17 +7,17 @@ namespace DraftTwitchViewers
     {
         public static void DebugLog(string text)
         {
-            Debug.Log("[DTV] (Log): " + text);
+            Log.Info("(Log): " + text);
         }
 
         public static void DebugWarning(string text)
         {
-            Debug.LogWarning("[DTV] (Warning): " + text);
+            Log.Warning("(Warning): " + text);
         }
 
         public static void DebugError(string text)
         {
-            Debug.LogError("[DTV] (ERROR): " + text);
+            Log.Error("(ERROR): " + text);
         }
 
         public static void LogToFile(string text, bool asLines)

@@ -445,6 +445,7 @@ namespace DraftTwitchViewers
             // Else, continue.
             else
             {
+                Log.Info("ScenarioDraftManager.DraftKerbal");
                 // Creates a new Unity web request (WWW) using the provided channel.
                 WWW getList = new WWW("http://tmi.twitch.tv/group/user/" + Instance.channel + "/chatters?client_id=" + clientID);
 
@@ -640,6 +641,7 @@ namespace DraftTwitchViewers
                             drafted.Add("name", realUsername + (Instance.addKerman ? " Kerman" : ""));
                             drafted.Add("job", realJob);
 
+                            Log.Info("Adding drafted user: " + realUsername);
                             // Invoke the success Action, allowing the caller to continue.
                             success.Invoke(drafted);
                         }

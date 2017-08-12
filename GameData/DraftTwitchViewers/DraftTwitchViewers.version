@@ -1,0 +1,15 @@
+{
+  "NAME": "DraftTwitchViewers",
+  "URL": "https://raw.githubusercontent.com/linuxgurugamer/DraftTwitchViewers/master/DraftTwitchViewers.version",
+  "VERSION": {
+    "MAJOR": 2,
+    "MINOR": 5,
+    "PATCH": 0,
+    "BUILD": 0
+  },
+  "KSP_VERSION": {
+    "MAJOR": 1,
+    "MINOR": 3,
+    "PATCH": 0
+  }
+}

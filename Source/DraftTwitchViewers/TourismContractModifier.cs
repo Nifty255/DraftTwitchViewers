@@ -106,7 +106,7 @@ namespace DraftTwitchViewers
             // Create a ConfigNode to save the contract into.
             ConfigNode test = new ConfigNode();
             toEnqueue.Save(test);
-
+            Log.Info("TourismContractModifier.EnqueueContract, test.Value: " + test.GetValue("type"));
             // If the contract is of the TourismContract type,
             if (test.GetValue("type") == "TourismContract")
             {
