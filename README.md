@@ -29,6 +29,12 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 
 CHANGELOG:
 
+2.5.1
+	updated for KSP 1.3.1
+
+2.5.0
+	Initial release by lgg
+
 v2.4.6:
 - KSP 1.2.1 compatibility update.
 - Added a now required client ID to all Twitch web API requests.

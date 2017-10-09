@@ -3,7 +3,6 @@
 
 rem Set variables here
 
-set H=R:\KSP_1.3.0_dev
 set GAMEDIR=DraftTwitchViewers
 set LICENSE=license.txt
 set README=README.md
@@ -47,5 +46,3 @@ rem Build the zip FILE
 set FILE="%RELEASEDIR%\%GAMEDIR%-%VERSION%.zip"
 IF EXIST %FILE% del /F %FILE%
 %ZIP% a -tzip %FILE% GameData
-
-pause
