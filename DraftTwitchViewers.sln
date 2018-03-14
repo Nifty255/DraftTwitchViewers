@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DraftTwitchViewers", "DraftTwitchViewers\DraftTwitchViewers.csproj", "{20801955-BBEB-447B-B35A-149A6B5A0833}"
 EndProject
@@ -10,6 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		..\buildRelease.bat = ..\buildRelease.bat
 		..\deploy.bat = ..\deploy.bat
 		..\DraftTwitchViewers.version = ..\DraftTwitchViewers.version
+		jenkins.txt = jenkins.txt
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 	EndProjectSection
@@ -27,5 +28,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DEB20D9F-1FE2-4773-A666-6FEA94C7FB91}
 	EndGlobalSection
 EndGlobal
