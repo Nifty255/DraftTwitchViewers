@@ -27,7 +27,7 @@
 1:DraftTwitchViewers, DraftTwitchViewers.version
 
 # 2:PROJNAME, PROJFILE, VERSIONFILE, PLUGINSFOLDER
-2:DraftTwitchViewers,Source/DraftTwitchViewers.csproj,DraftTwitchViewers.version,GameData/DraftTwitchViewers/Plugins
+2:DraftTwitchViewers,DraftTwitchViewers/DraftTwitchViewers.csproj,DraftTwitchViewers.version,GameData/DraftTwitchViewers/Plugins
 
 # 3:SOURCEFILE, DESTDIR
 3:DraftTwitchViewers.version,GameData/DraftTwitchViewers
