@@ -2,6 +2,9 @@
 using UnityEngine;
 using KSP.UI.Screens;
 
+using ClickThroughFix;
+using ToolbarControl_NS;
+
 namespace DraftTwitchViewers
 {
     /// <summary>
@@ -22,7 +25,9 @@ namespace DraftTwitchViewers
         /// <summary>
         /// The App Launcher Button
         /// </summary>
-        private ApplicationLauncherButton draftManagerButton;
+        //private ApplicationLauncherButton draftManagerButton;
+        ToolbarControl toolbarControl;
+
         /// <summary>
         /// Is the game UI hidden?
         /// </summary>
@@ -177,6 +182,9 @@ namespace DraftTwitchViewers
 
         #region Unity Functions
 
+        internal const string MODID = "DraftTwitchViewers_NS";
+        internal const string MODNAME = "Draft Twitch Viewers";
+
         /// <summary>
         /// Called when the MonoBehavior is awakened.
         /// </summary>
@@ -249,7 +257,7 @@ namespace DraftTwitchViewers
                 // Log a warning that it wasn't found.
                 Logger.DebugWarning("GlobalSettings.cfg wasn't found. Using defaults.");
             }
-
+#if false
             // Create the App Launcher button and add it.
             draftManagerButton = ApplicationLauncher.Instance.AddModApplication(
                        DisplayApp,
@@ -263,6 +271,24 @@ namespace DraftTwitchViewers
 
             // This app should be mutually exclusive. (It should disappear when the player clicks on another app.
             ApplicationLauncher.Instance.EnableMutuallyExclusive(draftManagerButton);
+#endif
+            
+
+            toolbarControl = gameObject.AddComponent<ToolbarControl>();
+            toolbarControl.AddToAllToolbars(DisplayApp,
+                       HideApp,
+                       HoverApp,
+                       UnhoverApp, DummyVoid,
+                       Disable,
+                ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.FLIGHT,
+                MODID,
+                "draftTwitchViewersButton",
+                "DraftTwitchViewers/Textures/Toolbar-38",
+                "DraftTwitchViewers/Textures/Toolbar-24",
+                MODNAME
+            );
+            // This app should be mutually exclusive. (It should disappear when the player clicks on another app.
+            toolbarControl.EnableMutuallyExclusive();
 
             // Set up the window bounds.
             windowRect = new Rect(Screen.width - windowWidth, 40f, windowWidth, windowHeight);
@@ -316,9 +342,9 @@ namespace DraftTwitchViewers
             GameEvents.onHideUI.Remove(OnHideUI);
         }
 
-        #endregion
+#endregion
 
-        #region App Functions
+#region App Functions
 
         /// <summary>
         /// Displays the app when the player clicks.
@@ -393,11 +419,17 @@ namespace DraftTwitchViewers
         {
             if (data == GameScenes.MAINMENU)
             {
+                toolbarControl.OnDestroy();
+                Destroy(toolbarControl);
+
+#if false
                 GameEvents.onGameSceneLoadRequested.Remove(DestroyApp);
                 ApplicationLauncher.Instance.RemoveModApplication(draftManagerButton);
+#endif
                 instance = null;
                 Destroy(gameObject);
                 Logger.DebugLog("DTV App Destroyed.");
+
             }
         }
 
@@ -406,9 +438,9 @@ namespace DraftTwitchViewers
         /// </summary>
         private void DummyVoid() { /* I do nothing!!! \('o')/ */ }
 
-        #endregion
+#endregion
 
-        #region GUI Functions
+#region GUI Functions
 
         /// <summary>
         /// Called when Unity reaches the GUI phase.
@@ -419,14 +451,14 @@ namespace DraftTwitchViewers
             if ((isShowing || isHovering) && !isUIHidden)
             {
                 // Display the window.
-                GUILayout.Window(GetInstanceID(), windowRect, AppWindow, "Draft Twitch Viewers", HighLogic.Skin.window);
+                ClickThruBlocker.GUILayoutWindow(GetInstanceID(), windowRect, AppWindow, "Draft Twitch Viewers", HighLogic.Skin.window);
             }
 
             // If the alert is showing,
             if (alertShowing && !isUIHidden)
             {
                 // Display the window.
-                GUILayout.Window(GetInstanceID() + 1, alertRect, AlertWindow, "DTV Alert: " + (failedToDraft ? "Failed!" : (draftBusy ? "Working..." : "Success!")), HighLogic.Skin.window);
+                ClickThruBlocker.GUILayoutWindow(GetInstanceID() + 1, alertRect, AlertWindow, "DTV Alert: " + (failedToDraft ? "Failed!" : (draftBusy ? "Working..." : "Success!")), HighLogic.Skin.window);
             }
 
             Reposition();
@@ -438,6 +470,13 @@ namespace DraftTwitchViewers
         /// <param name="windowID">The windiw ID.</param>
         private void AppWindow(int windowID)
         {
+            if (GUI.Button(new Rect(windowRect.width - 20, 2, 18, 18), "x"))
+
+            {
+                toolbarControl.SetFalse(true);
+                return;
+            }
+
             GUILayout.BeginVertical(HighLogic.Skin.box);
 
             // Show draft shortcut (Alt+D)
@@ -616,9 +655,9 @@ namespace DraftTwitchViewers
             isUIHidden = true;
         }
 
-        #endregion
+#endregion
 
-        #region KSP Functions
+#region KSP Functions
 
         /// <summary>
         /// Sets up for a draft.
@@ -801,9 +840,9 @@ namespace DraftTwitchViewers
             }
         }
 
-        #endregion
+#endregion
 
-        #region Misc Methods
+#region Misc Methods
 
         /// <summary>
         /// Determines if the game is currently in Preflight status (The loaded scene is Flight and the active vessel is on the LaunchPad or Runway).
@@ -822,6 +861,6 @@ namespace DraftTwitchViewers
             }
         }
 
-        #endregion
+#endregion
     }
 }

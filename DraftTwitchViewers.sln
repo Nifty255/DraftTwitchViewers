@@ -7,12 +7,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DraftTwitchViewers", "Draft
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{756BFBE2-EC11-48FC-BE8B-C71A739E5297}"
 	ProjectSection(SolutionItems) = preProject
-		..\buildRelease.bat = ..\buildRelease.bat
-		..\deploy.bat = ..\deploy.bat
-		..\DraftTwitchViewers.version = ..\DraftTwitchViewers.version
+		buildRelease.bat = buildRelease.bat
+		Changelog.txt = Changelog.txt
+		deploy.bat = deploy.bat
+		DraftTwitchViewers.version = DraftTwitchViewers.version
 		jenkins.txt = jenkins.txt
-		..\LICENSE = ..\LICENSE
-		..\README.md = ..\README.md
+		LICENSE.txt = LICENSE.txt
+		README.md = README.md
 	EndProjectSection
 EndProject
 Global
