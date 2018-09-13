@@ -1,3 +1,5 @@
+2.6.1
+	Improved message when contract draft fails due to no channel entered
 
 2.6.0
 	Updated for 1.4.1

@@ -243,7 +243,8 @@ namespace DraftTwitchViewers
                 working = false;
 
                 // Notify the player that the contract draft failed because of a lack of channel.
-                ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">Contract draft FAILED. (Please input a channel to draft from.)</color>", 5f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">No channel specified for drafting, contract draft FAILED.</color>", 15f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">(Please enter a channel to draft from.)</color>", 15f, ScreenMessageStyle.UPPER_CENTER);
 
             }
             // Else, follow normal failure procedure.
