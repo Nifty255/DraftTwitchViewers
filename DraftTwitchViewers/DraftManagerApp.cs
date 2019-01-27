@@ -470,6 +470,10 @@ namespace DraftTwitchViewers
         /// <param name="windowID">The windiw ID.</param>
         private void AppWindow(int windowID)
         {
+            if (ScenarioDraftManager.Instance == null)
+                return;
+
+          
             if (GUI.Button(new Rect(windowRect.width - 20, 2, 18, 18), "x"))
 
             {
@@ -482,13 +486,19 @@ namespace DraftTwitchViewers
             // Show draft shortcut (Alt+D)
             GUILayout.Label("Quick Draft: Alt+Insert (Toggle " + (UseHotkey ? "off" : "on") + " in Customize)", HighLogic.Skin.label);
             GUILayout.Label("", HighLogic.Skin.label);
+        
 
+            if (ScenarioDraftManager.Instance == null)
+                Log.Info("ScenarioDraftManager.Instance is null");
+            if (ScenarioDraftManager.Instance.channel == null)
+                Log.Info("ScenarioDraftManager.Instance.channel is null");
             // Channel
             GUILayout.Label("Channel (Lowercase):", HighLogic.Skin.label);
             ScenarioDraftManager.Instance.channel = GUILayout.TextField(ScenarioDraftManager.Instance.channel, HighLogic.Skin.textField);
 
             //Spacer Label
             GUILayout.Label("", HighLogic.Skin.label);
+    
 
             // If career, display the cost of next draft.
             if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
@@ -548,9 +558,9 @@ namespace DraftTwitchViewers
                 // Perform the draft.
                 DoDraft(true);
             }
-
+  
             GUI.enabled = (ScenarioDraftManager.Instance.DrawnUsers.Count > 0);
-
+   
             // Reset drawing list
             if (GUILayout.Button((ScenarioDraftManager.Instance.DrawnUsers.Count == 0 ? "Drawn User List Empty!" : "Empty Drawn User List"), HighLogic.Skin.button))
             {
@@ -609,10 +619,9 @@ namespace DraftTwitchViewers
                     ScenarioDraftManager.Instance.SaveGlobalSettings();
                 }
             }
-
+ 
             //Version Label
             GUILayout.Label("Version " + (typeof(DraftManagerApp).Assembly.GetName().Version.ToString()), HighLogic.Skin.label);
-
             GUILayout.EndVertical();
         }
 

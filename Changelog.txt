@@ -1,3 +1,7 @@
+2.6.1.2
+	Fixed nullref when going into the Tracking station while DTV is being shown
+	Added check for "Jebediah Kermin"" in a rescue contract, if found, ignore that contract
+
 2.6.1.1
 	Version bump for 1.5 rebuild
 

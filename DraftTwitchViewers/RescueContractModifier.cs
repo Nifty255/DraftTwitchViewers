@@ -100,7 +100,7 @@ namespace DraftTwitchViewers
             // Create a ConfigNode to save the contract into.
             ConfigNode test = new ConfigNode();
             toEnqueue.Save(test);
-            Log.Info("RescueContractModifier.EnqueueContract, test.Value: " + test.GetValue("type"));
+
             // If the contract is of the RecoverAsset type,
             if (test.GetValue("type") == "RecoverAsset")
             {
@@ -110,6 +110,9 @@ namespace DraftTwitchViewers
                     // If the value contained isn't null or empty,
                     if (!string.IsNullOrEmpty(test.GetValue("kerbalName")))
                     {
+                        if (test.GetValue("kerbalName") == "Jebediah Kerman")
+                            return;
+                       
                         // If the contract wasn't already modified,
                         if (test.GetNodes("PARAM")[0].GetValue("name") != "ModifiedByDTV")
                         {
@@ -153,6 +156,7 @@ namespace DraftTwitchViewers
 
             // Replace the old name with the new.
             replacement.SetValue("kerbalName", info["name"]);
+                
 
             // For each PARAM node in the CONTRACT node,
             foreach (ConfigNode node in replacement.nodes)
