@@ -156,61 +156,60 @@ namespace DraftTwitchViewers
 
             // Replace the old name with the new.
             replacement.SetValue("kerbalName", info["name"]);
-                
 
-            // For each PARAM node in the CONTRACT node,
-            foreach (ConfigNode node in replacement.nodes)
+            // Get an old Kerbal and rename it.
+            ProtoCrewMember toRename = HighLogic.CurrentGame.CrewRoster[oldName];
+            toRename.ChangeName(info["name"]);
+
+            // Get a list of PARAM nodes in the contract.
+            ConfigNode[] paramNodes = replacement.GetNodes("PARAM");
+
+            // Iterate through them,
+            for (int i = 0; i < paramNodes.Length; i++)
             {
-                // Get the name of the contract parameter.
-                string paramName = node.GetValue("name");
+                string paramName = paramNodes[i].GetValue("name");
 
                 // Perform certain replacement functions for each parameter.
                 switch (paramName)
                 {
                     case "AcquireCrew":
                         {
-                            node.SetValue("title", "Save " + info["name"]);
+                            Debug.Log("In ACQUIRECREW");
+                            paramNodes[i].SetValue("title", "Save " + info["name"]);
+                            paramNodes[i].AddValue("kerbal", info["name"]);
+                            toMod.RemoveParameter(0);
                             break;
                         }
                     case "AcquirePart":
                         {
                             string firstName = info["name"].Substring(0, info["name"].IndexOf(' '));
-                            node.SetValue("title", "Obtain " + firstName + "'s Scrap");
+                            paramNodes[i].SetValue("title", "Obtain " + firstName + "'s Scrap");
+                            toMod.RemoveParameter(0);
                             break;
                         }
                     case "RecoverKerbal":
                         {
-                            node.SetValue("title", "Recover " + info["name"] + " on Kerbin");
+                            Debug.Log("In RECOVERKERBAL");
+                            paramNodes[i].SetValue("title", "Recover " + info["name"] + " on Kerbin");
+                            paramNodes[i].AddValue("kerbal", info["name"]);
+                            toMod.RemoveParameter(0);
                             break;
                         }
                     case "RecoverPart":
                         {
                             string firstName = info["name"].Substring(0, info["name"].IndexOf(' '));
-                            node.SetValue("title", "Recover " + firstName + "'s Scrap on Kerbin");
+                            paramNodes[i].SetValue("title", "Recover " + firstName + "'s Scrap on Kerbin");
+                            toMod.RemoveParameter(0);
                             break;
                         }
                 }
             }
 
-            // Get a count of parameters currently held by the contract.
-            int parameters = toMod.ParameterCount;
-
-            // Iterate using this count, removing the one parameter each time, effectively clearing the list.
-            for (int i = 0; i < parameters; i++)
-            {
-                // Remove the first parameter.
-                toMod.RemoveParameter(0);
-            }
-
             // Add the custom parameter indicating DTV has modified this contract.
-            toMod.AddParameter(new ModifiedByDTV());
-            
+            toMod.AddParameter((ContractParameter)new ModifiedByDTV());
+
             // Reload the contract.
             Contract.Load(toMod, replacement);
-
-            // Get the old Kerbal and rename it.
-            ProtoCrewMember toRename = HighLogic.CurrentGame.CrewRoster[oldName];
-            toRename.ChangeName(info["name"]);
 
             // Logging.
             Logger.DebugLog("Draft Success (" + contractsToModify.Count.ToString() + " contracts waiting): " + info["name"]);
