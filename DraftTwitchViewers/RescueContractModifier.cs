@@ -174,7 +174,6 @@ namespace DraftTwitchViewers
                 {
                     case "AcquireCrew":
                         {
-                            Debug.Log("In ACQUIRECREW");
                             paramNodes[i].SetValue("title", "Save " + info["name"]);
                             paramNodes[i].AddValue("kerbal", info["name"]);
                             toMod.RemoveParameter(0);
@@ -189,7 +188,6 @@ namespace DraftTwitchViewers
                         }
                     case "RecoverKerbal":
                         {
-                            Debug.Log("In RECOVERKERBAL");
                             paramNodes[i].SetValue("title", "Recover " + info["name"] + " on Kerbin");
                             paramNodes[i].AddValue("kerbal", info["name"]);
                             toMod.RemoveParameter(0);
