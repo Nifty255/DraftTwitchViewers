@@ -287,6 +287,9 @@ namespace DraftTwitchViewers
                 "DraftTwitchViewers/Textures/Toolbar-24",
                 MODNAME
             );
+            toolbarControl.AddLeftRightClickCallbacks(null, DoRightClick);
+
+
             // This app should be mutually exclusive. (It should disappear when the player clicks on another app.
             toolbarControl.EnableMutuallyExclusive();
 
@@ -346,6 +349,16 @@ namespace DraftTwitchViewers
 
 #region App Functions
 
+        void DoRightClick()
+        {
+            // Lowercase the channel.
+            ScenarioDraftManager.Instance.channel = ScenarioDraftManager.Instance.channel.ToLower();
+
+            // Perform the draft.
+            DoDraft(false);
+        }
+
+      
         /// <summary>
         /// Displays the app when the player clicks.
         /// </summary>
@@ -402,13 +415,13 @@ namespace DraftTwitchViewers
             if (HighLogic.LoadedSceneIsFlight)
             {
                 // Set the window to the top right, offsetting for the size and launcher area.
-                windowRect = new Rect(Screen.width - (windowWidth * (isCustomizing ? 2 : 1)) - 42, 0f, (windowWidth * (isCustomizing ? 2 : 1)), windowHeight);
+                windowRect = new Rect(Screen.width - (windowWidth /* * (isCustomizing ? 2 : 1) */ ) - 42, 0f, (windowWidth /* * (isCustomizing ? 2 : 1) */ ), windowHeight);
             }
             // Else, if the current scene is the Space Center,
             else if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
             {
                 // Set the window to the bottom right, offsetting for the size and launcher area.
-                windowRect = new Rect(Screen.width - (windowWidth * (isCustomizing ? 2 : 1)), 42f, (windowWidth * (isCustomizing ? 2 : 1)), windowHeight);
+                windowRect = new Rect(Screen.width - (windowWidth /* * (isCustomizing ? 2 : 1) */ ), 42f, (windowWidth /* * (isCustomizing ? 2 : 1) */ ), windowHeight);
             }
         }
 
@@ -863,6 +876,7 @@ namespace DraftTwitchViewers
             {
                 if (HighLogic.LoadedSceneIsFlight)
                 {
+                    return (FlightGlobals.ActiveVessel.situation == Vessel.Situations.PRELAUNCH);
                     return FlightGlobals.ActiveVessel.landedAt == "KSC_LaunchPad_Platform" || FlightGlobals.ActiveVessel.landedAt == "Runway";
                 }
 

@@ -1,3 +1,8 @@
+2.6.1.5
+	Fixed being able to draft a viewer directly into a vessel 
+	Right-clicking the button now will do a draft of any viewer
+	Eliminated the double-width window when customizing
+
 2.6.1.4
 	Merged in changes from @kujuman to fix the rescue contracts
 

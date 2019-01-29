@@ -27,3 +27,6 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 - Players can add the viewer directly to the current vessel.
 - Rescue your viewers or take them on tours with DTV modified Career Mode Contracts!
 
+TODO
+	Reimplement right-click on button to draft,  The default action for right clicking is to draft with any job.
+	After 5 failures, instead of destroying, pause for a time and try again
