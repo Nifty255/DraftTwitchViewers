@@ -28,5 +28,5 @@ Draft Twitch Viewers (DTV) uses web requests to connect to Twitch, and can pick 
 - Rescue your viewers or take them on tours with DTV modified Career Mode Contracts!
 
 TODO
-	Reimplement right-click on button to draft,  The default action for right clicking is to draft with any job.
-	After 5 failures, instead of destroying, pause for a time and try again
+	After 5 failures, maybe automatically clear the list and try again???
+	need to clear drafted list and try again

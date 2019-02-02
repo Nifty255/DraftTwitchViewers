@@ -1,3 +1,8 @@
+2.6.1.6
+	Added code to remove any users in chat which have the same name as a kerbal
+	Added toggle for the skin
+	Added 5 minute pause instead of deactivation, if 5 failures in a row
+
 2.6.1.5
 	Fixed being able to draft a viewer directly into a vessel 
 	Right-clicking the button now will do a draft of any viewer

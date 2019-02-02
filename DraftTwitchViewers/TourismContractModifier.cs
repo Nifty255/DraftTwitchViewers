@@ -273,11 +273,13 @@ namespace DraftTwitchViewers
                 if (failures == 5)
                 {
                     // Notify the player that the contract draft failed consecutively.
-                    ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">Contract draft FAILED. (5 failed attempts. Deactivating.)</color>", 5f, ScreenMessageStyle.UPPER_CENTER);
+                    //ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">Contract draft FAILED. (5 failed attempts. Deactivating.)</color>", 5f, ScreenMessageStyle.UPPER_CENTER);
+                    ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">Contract draft FAILED. (5 failed attempts. Starting 5 minute pause.)</color>", 5f, ScreenMessageStyle.UPPER_CENTER);
 
+                    StartCoroutine(RescueContractModifier.Instance.PauseBeforeRestart());
                     // Log an error and destroy the addon.
-                    Logger.DebugError("5 failed Contract Drafts. Disabling.");
-                    Destroy(gameObject);
+                    //Logger.DebugError("5 failed Contract Drafts. Disabling.");
+                    //Destroy(gameObject);
                 }
             }
         }

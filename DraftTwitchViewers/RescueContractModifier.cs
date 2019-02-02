@@ -112,7 +112,7 @@ namespace DraftTwitchViewers
                     {
                         if (test.GetValue("kerbalName") == "Jebediah Kerman")
                             return;
-                       
+
                         // If the contract wasn't already modified,
                         if (test.GetNodes("PARAM")[0].GetValue("name") != "ModifiedByDTV")
                         {
@@ -272,15 +272,27 @@ namespace DraftTwitchViewers
                 if (failures == 5)
                 {
                     // Notify the player that the contract draft failed consecutively.
-                    ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">Contract draft FAILED. (5 failed attempts. Deactivating.)</color>", 5f, ScreenMessageStyle.UPPER_CENTER);
+                    //ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">Contract draft FAILED. (5 failed attempts. Deactivating.)</color>", 5f, ScreenMessageStyle.UPPER_CENTER);
+                    ScreenMessages.PostScreenMessage("<color=" + XKCDColors.HexFormat.KSPNotSoGoodOrange + ">Contract draft FAILED. (5 failed attempts. Starting 5 minute pause.)</color>", 5f, ScreenMessageStyle.UPPER_CENTER);
+
+                    StartCoroutine(PauseBeforeRestart());
 
                     // Log an error and destroy the addon.
-                    Logger.DebugError("5 failed Contract Drafts. Disabling.");
-                    Destroy(gameObject);
+                    // Logger.DebugError("5 failed Contract Drafts. Disabling.");
+                    // Destroy(gameObject);
+
                 }
             }
         }
 
+        public IEnumerator PauseBeforeRestart()
+        {
+            Logger.DebugError("5 failed contracts, pausing for 5 minutes");
+            ScenarioDraftManager.pausedForFailure = true;
+            yield return new WaitForSeconds(300f);
+
+            ScenarioDraftManager.pausedForFailure = false;
+        }
         #endregion
-    }
+    } 
 }

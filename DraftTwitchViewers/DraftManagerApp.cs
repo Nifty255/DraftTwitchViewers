@@ -103,6 +103,11 @@ namespace DraftTwitchViewers
         /// </summary>
         private bool useHotkey = true;
         /// <summary>
+        /// Skin selection
+        /// </summary>
+        private bool useKSPSkin = true;
+
+        /// <summary>
         /// Add the kerbal to the current craft when drafted?
         /// </summary>
         private bool addToCraft = false;
@@ -149,6 +154,15 @@ namespace DraftTwitchViewers
         {
             get { return useHotkey; }
             set { if (useHotkey != value) { useHotkey = value; SaveSettings(); } }
+        }
+
+        /// <summary>
+        /// UseHotkey property. Triggers autosave when changed.
+        /// </summary>
+        private bool UseKSPSkin
+        {
+            get { return useKSPSkin; }
+            set { if (useKSPSkin != value) { useKSPSkin = value; SaveSettings(); } }
         }
 
         /// <summary>
@@ -451,27 +465,34 @@ namespace DraftTwitchViewers
         /// </summary>
         private void DummyVoid() { /* I do nothing!!! \('o')/ */ }
 
-#endregion
+        #endregion
 
-#region GUI Functions
+        #region GUI Functions
+
+        GUISkin ActiveSkin;
 
         /// <summary>
         /// Called when Unity reaches the GUI phase.
         /// </summary>
         private void OnGUI()
         {
+            if (UseKSPSkin)
+                ActiveSkin = HighLogic.Skin;
+            else
+                ActiveSkin = GUI.skin;
+
             // If the app is showing ir hovered over,
             if ((isShowing || isHovering) && !isUIHidden)
             {
                 // Display the window.
-                ClickThruBlocker.GUILayoutWindow(GetInstanceID(), windowRect, AppWindow, "Draft Twitch Viewers", HighLogic.Skin.window);
+                ClickThruBlocker.GUILayoutWindow(GetInstanceID(), windowRect, AppWindow, "Draft Twitch Viewers", ActiveSkin.window);
             }
 
             // If the alert is showing,
             if (alertShowing && !isUIHidden)
             {
                 // Display the window.
-                ClickThruBlocker.GUILayoutWindow(GetInstanceID() + 1, alertRect, AlertWindow, "DTV Alert: " + (failedToDraft ? "Failed!" : (draftBusy ? "Working..." : "Success!")), HighLogic.Skin.window);
+                ClickThruBlocker.GUILayoutWindow(GetInstanceID() + 1, alertRect, AlertWindow, "DTV Alert: " + (failedToDraft ? "Failed!" : (draftBusy ? "Working..." : "Success!")), ActiveSkin.window);
             }
 
             Reposition();
@@ -494,11 +515,11 @@ namespace DraftTwitchViewers
                 return;
             }
 
-            GUILayout.BeginVertical(HighLogic.Skin.box);
+            GUILayout.BeginVertical(ActiveSkin.box);
 
             // Show draft shortcut (Alt+D)
-            GUILayout.Label("Quick Draft: Alt+Insert (Toggle " + (UseHotkey ? "off" : "on") + " in Customize)", HighLogic.Skin.label);
-            GUILayout.Label("", HighLogic.Skin.label);
+            GUILayout.Label("Quick Draft: Alt+Insert (Toggle " + (UseHotkey ? "off" : "on") + " in Customize)", ActiveSkin.label);
+            GUILayout.Label("", ActiveSkin.label);
         
 
             if (ScenarioDraftManager.Instance == null)
@@ -506,21 +527,21 @@ namespace DraftTwitchViewers
             if (ScenarioDraftManager.Instance.channel == null)
                 Log.Info("ScenarioDraftManager.Instance.channel is null");
             // Channel
-            GUILayout.Label("Channel (Lowercase):", HighLogic.Skin.label);
-            ScenarioDraftManager.Instance.channel = GUILayout.TextField(ScenarioDraftManager.Instance.channel, HighLogic.Skin.textField);
+            GUILayout.Label("Channel (Lowercase):", ActiveSkin.label);
+            ScenarioDraftManager.Instance.channel = GUILayout.TextField(ScenarioDraftManager.Instance.channel, ActiveSkin.textField);
 
             //Spacer Label
-            GUILayout.Label("", HighLogic.Skin.label);
+            GUILayout.Label("", ActiveSkin.label);
     
 
             // If career, display the cost of next draft.
             if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
             {
-                GUILayout.Label("Next Draft: -" + (GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount())).ToString("N0") + " Funds", HighLogic.Skin.label);
+                GUILayout.Label("Next Draft: -" + (GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount())).ToString("N0") + " Funds", ActiveSkin.label);
             }
 
             // Draft a Viewer from Twitch, skipping viewers who aren't Pilots.
-            if (GUILayout.Button("Draft a Pilot", HighLogic.Skin.button))
+            if (GUILayout.Button("Draft a Pilot", ActiveSkin.button))
             {
                 // Lowercase the channel.
                 ScenarioDraftManager.Instance.channel = ScenarioDraftManager.Instance.channel.ToLower();
@@ -530,7 +551,7 @@ namespace DraftTwitchViewers
             }
 
             // Draft a Viewer from Twitch, skipping viewers who aren't Engineers.
-            if (GUILayout.Button("Draft an Engineer", HighLogic.Skin.button))
+            if (GUILayout.Button("Draft an Engineer", ActiveSkin.button))
             {
                 // Lowercase the channel.
                 ScenarioDraftManager.Instance.channel = ScenarioDraftManager.Instance.channel.ToLower();
@@ -540,7 +561,7 @@ namespace DraftTwitchViewers
             }
 
             // Draft a Viewer from Twitch, skipping viewers who aren't Scientists.
-            if (GUILayout.Button("Draft a Scientist", HighLogic.Skin.button))
+            if (GUILayout.Button("Draft a Scientist", ActiveSkin.button))
             {
                 // Lowercase the channel.
                 ScenarioDraftManager.Instance.channel = ScenarioDraftManager.Instance.channel.ToLower();
@@ -550,7 +571,7 @@ namespace DraftTwitchViewers
             }
 
             // Draft a Viewer from Twitch, with any job.
-            if (GUILayout.Button("Draft Any Viewer", HighLogic.Skin.button))
+            if (GUILayout.Button("Draft Any Viewer", ActiveSkin.button))
             {
                 // Lowercase the channel.
                 ScenarioDraftManager.Instance.channel = ScenarioDraftManager.Instance.channel.ToLower();
@@ -560,10 +581,10 @@ namespace DraftTwitchViewers
             }
 
             //Spacer Label
-            GUILayout.Label("", HighLogic.Skin.label);
+            GUILayout.Label("", ActiveSkin.label);
 
             // Pull a name for a drawing
-            if (GUILayout.Button("Do a Viewer Drawing", HighLogic.Skin.button))
+            if (GUILayout.Button("Do a Viewer Drawing", ActiveSkin.button))
             {
                 // Lowercase the channel.
                 ScenarioDraftManager.Instance.channel = ScenarioDraftManager.Instance.channel.ToLower();
@@ -575,58 +596,71 @@ namespace DraftTwitchViewers
             GUI.enabled = (ScenarioDraftManager.Instance.DrawnUsers.Count > 0);
    
             // Reset drawing list
-            if (GUILayout.Button((ScenarioDraftManager.Instance.DrawnUsers.Count == 0 ? "Drawn User List Empty!" : "Empty Drawn User List"), HighLogic.Skin.button))
+            if (GUILayout.Button((ScenarioDraftManager.Instance.DrawnUsers.Count == 0 ? "Drawn User List Empty!" : "Empty Drawn User List"), ActiveSkin.button))
             {
                 // Empty the list.
                 ScenarioDraftManager.Instance.DrawnUsers = new List<string>();
                 // Save the list.
                 ScenarioDraftManager.Instance.SaveDrawn();
             }
-
+#if false
+            GUI.enabled = (ScenarioDraftManager.Instance.AlreadyDrafted.Count > 0);
+            // Reset drafting list
+            if (GUILayout.Button((ScenarioDraftManager.Instance.AlreadyDrafted.Count == 0 ? "Drawn User List Empty!" : "Empty Drafted User List"), ActiveSkin.button))
+            {
+                // Empty the list.
+                ScenarioDraftManager.Instance.AlreadyDrafted = new List<string>();
+                // Save the list.
+                //ScenarioDraftManager.Instance.SaveDrafted();
+            }
+#endif
             GUI.enabled = true;
 
             //Spacer Label
-            GUILayout.Label("", HighLogic.Skin.label);
+            GUILayout.Label("", ActiveSkin.label);
 
             // Customize
-            if (GUILayout.Button("Customize", HighLogic.Skin.button))
+            if (GUILayout.Button("Customize", ActiveSkin.button))
             {
                 isCustomizing = !isCustomizing;
             }
             if (isCustomizing)
             {
                 // Use hotkey toggle.
-                UseHotkey = GUILayout.Toggle(UseHotkey, "Quick Draft Hotkey", HighLogic.Skin.toggle);
+                UseHotkey = GUILayout.Toggle(UseHotkey, "Quick Draft Hotkey", ActiveSkin.toggle);
+
+                // Use UseKSPSkin toggle.
+                UseKSPSkin = GUILayout.Toggle(UseKSPSkin, "Use KSP Skin", ActiveSkin.toggle);
 
                 // Add drafted to craft toggle.
-                AddToCraft = GUILayout.Toggle(AddToCraft, "Add drafted Kerbals to craft (Preflight Only)", HighLogic.Skin.toggle);
+                AddToCraft = GUILayout.Toggle(AddToCraft, "Add drafted Kerbals to craft (Preflight Only)", ActiveSkin.toggle);
 
                 // Add "Kerman" toggle.
-                ScenarioDraftManager.Instance.AddKerman = GUILayout.Toggle(ScenarioDraftManager.Instance.AddKerman, "Add \"Kerman\" to names", HighLogic.Skin.toggle);
+                ScenarioDraftManager.Instance.AddKerman = GUILayout.Toggle(ScenarioDraftManager.Instance.AddKerman, "Add \"Kerman\" to names", ActiveSkin.toggle);
 
                 // On successful draft.
-                GUILayout.Label("Successful Draft:", HighLogic.Skin.label);
-                DraftMessage = GUILayout.TextField(DraftMessage, HighLogic.Skin.textField);
+                GUILayout.Label("Successful Draft:", ActiveSkin.label);
+                DraftMessage = GUILayout.TextField(DraftMessage, ActiveSkin.textField);
 
                 // On successful draw.
-                GUILayout.Label("Successful Drawing:", HighLogic.Skin.label);
-                DrawMessage = GUILayout.TextField(DrawMessage, HighLogic.Skin.textField);
+                GUILayout.Label("Successful Drawing:", ActiveSkin.label);
+                DrawMessage = GUILayout.TextField(DrawMessage, ActiveSkin.textField);
 
                 // $user Explanation
-                GUILayout.Label("", HighLogic.Skin.label);
-                GUILayout.Label("\"&user\" = The user drafted.", HighLogic.Skin.label);
-                GUILayout.Label("\"&skill\" = The user's skill.", HighLogic.Skin.label);
+                GUILayout.Label("", ActiveSkin.label);
+                GUILayout.Label("\"&user\" = The user drafted.", ActiveSkin.label);
+                GUILayout.Label("\"&skill\" = The user's skill.", ActiveSkin.label);
 
                 // Bots to remove
-                GUILayout.Label("", HighLogic.Skin.label);
-                GUILayout.Label("Bots to Remove (One per line, no commas):", HighLogic.Skin.label);
+                GUILayout.Label("", ActiveSkin.label);
+                GUILayout.Label("Bots to Remove (One per line, no commas):", ActiveSkin.label);
                 string botsString = string.Join("\n", ScenarioDraftManager.Instance.BotsToRemove.ToArray());
-                botsString = GUILayout.TextArea(botsString, HighLogic.Skin.textArea);
+                botsString = GUILayout.TextArea(botsString, ActiveSkin.textArea);
                 ScenarioDraftManager.Instance.BotsToRemove = new List<string>();
                 if (botsString != "") { ScenarioDraftManager.Instance.BotsToRemove.AddRange(botsString.Split('\n')); }
 
                 // Save
-                if (GUILayout.Button("Save", HighLogic.Skin.button))
+                if (GUILayout.Button("Save", ActiveSkin.button))
                 {
                     SaveSettings();
                     ScenarioDraftManager.Instance.SaveGlobalSettings();
@@ -634,7 +668,7 @@ namespace DraftTwitchViewers
             }
  
             //Version Label
-            GUILayout.Label("Version " + (typeof(DraftManagerApp).Assembly.GetName().Version.ToString()), HighLogic.Skin.label);
+            GUILayout.Label("Version " + (typeof(DraftManagerApp).Assembly.GetName().Version.ToString()), ActiveSkin.label);
             GUILayout.EndVertical();
         }
 
@@ -647,11 +681,11 @@ namespace DraftTwitchViewers
             GUILayout.BeginVertical();
 
             // Alert text.
-            GUILayout.Label(alertingMsg, HighLogic.Skin.label);
+            GUILayout.Label(alertingMsg, ActiveSkin.label);
 
             // The close button.
-            GUILayout.Label("", HighLogic.Skin.label);
-            if (GUILayout.Button("Close", HighLogic.Skin.button))
+            GUILayout.Label("", ActiveSkin.label);
+            if (GUILayout.Button("Close", ActiveSkin.button))
             {
                 alertingMsg = "";
                 alertShowing = false;
@@ -813,10 +847,15 @@ namespace DraftTwitchViewers
                 }
 
                 // Write the useHotkey setting to it.
-                if (draftSettings.HasValue("useHotkey")) { draftSettings.SetValue("useHotkey", useHotkey.ToString()); } else { draftSettings.AddValue("useHotkey", useHotkey.ToString()); }
+                draftSettings.SetValue("useHotkey", useHotkey.ToString(), true);
+
+                // Write the UseKSPSkin setting to it.
+                draftSettings.SetValue("UseKSPSkin", UseKSPSkin, true);
+
+                
 
                 // Write the addToCraft setting to it.
-                if (draftSettings.HasValue("addToCraft")) { draftSettings.SetValue("addToCraft", addToCraft.ToString()); } else { draftSettings.AddValue("addToCraft", addToCraft.ToString()); }
+                draftSettings.SetValue("addToCraft", addToCraft.ToString(), true); 
 
                 // Get the message settings node.
                 ConfigNode messageSettings = globalSettings.GetNode("MESSAGES");
@@ -829,8 +868,8 @@ namespace DraftTwitchViewers
                 }
 
                 // Write the messages to it.
-                if (messageSettings.HasValue("draftMessage")) { messageSettings.SetValue("draftMessage", draftMessage); } else { messageSettings.AddValue("draftMessage", draftMessage); }
-                if (messageSettings.HasValue("drawMessage")) { messageSettings.SetValue("drawMessage", drawMessage); } else { messageSettings.AddValue("drawMessage", drawMessage); }
+                messageSettings.SetValue("draftMessage", draftMessage, true);
+                messageSettings.SetValue("drawMessage", drawMessage, true); 
 
                 // Save the file.
                 globalSettings.Save(settingsLocation + "GlobalSettings.cfg");
@@ -877,7 +916,7 @@ namespace DraftTwitchViewers
                 if (HighLogic.LoadedSceneIsFlight)
                 {
                     return (FlightGlobals.ActiveVessel.situation == Vessel.Situations.PRELAUNCH);
-                    return FlightGlobals.ActiveVessel.landedAt == "KSC_LaunchPad_Platform" || FlightGlobals.ActiveVessel.landedAt == "Runway";
+                    //return FlightGlobals.ActiveVessel.landedAt == "KSC_LaunchPad_Platform" || FlightGlobals.ActiveVessel.landedAt == "Runway";
                 }
 
                 return false;
