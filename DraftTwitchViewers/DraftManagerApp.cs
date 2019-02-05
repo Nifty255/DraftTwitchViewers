@@ -216,7 +216,7 @@ namespace DraftTwitchViewers
             // Save this instance so others can detect it.
             instance = this;
 
-            SoundManager.LoadSound("DraftTwitchViewers/Sounds/Start", "Start");
+            SoundManager.LoadSound("DraftTwitchViewers/Sounds/a", "Start");
             SoundManager.LoadSound("DraftTwitchViewers/Sounds/Success", "Success");
             SoundManager.LoadSound("DraftTwitchViewers/Sounds/Failure", "Failure");
             startClip = SoundManager.CreateSound("Start", false);
@@ -540,6 +540,9 @@ namespace DraftTwitchViewers
                 GUILayout.Label("Next Draft: -" + (GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount())).ToString("N0") + " Funds", ActiveSkin.label);
             }
 
+            if (PartSelectionManager.Instance.toAdd != null)
+                GUI.enabled = false;
+
             // Draft a Viewer from Twitch, skipping viewers who aren't Pilots.
             if (GUILayout.Button("Draft a Pilot", ActiveSkin.button))
             {
@@ -579,6 +582,8 @@ namespace DraftTwitchViewers
                 // Perform the draft.
                 DoDraft(false);
             }
+
+            GUI.enabled = true;
 
             //Spacer Label
             GUILayout.Label("", ActiveSkin.label);

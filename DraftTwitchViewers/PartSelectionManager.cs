@@ -24,7 +24,7 @@ namespace DraftTwitchViewers
         /// <summary>
         /// The crew member to add.
         /// </summary>
-        ProtoCrewMember toAdd = null;
+        internal ProtoCrewMember toAdd = null;
 
         /// <summary>
         /// The list of PartSelectors used to add a Kerbal.
@@ -146,6 +146,9 @@ namespace DraftTwitchViewers
         /// <param name="p">The selected part.</param>
         private void OnPartSelected(Part p)
         {
+            if (toAdd == null)
+                return;
+
             // Add the crew member.
             p.AddCrewmember(toAdd);
             // Set roster status to Assigned.

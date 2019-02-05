@@ -1,3 +1,7 @@
+2.6.1.7
+	Fixed nullref if multiple drafts done without assigning them to a part
+	Disabled draft buttons if a draft is waiting to be assigned to the part
+
 2.6.1.6
 	Added code to remove any users in chat which have the same name as a kerbal
 	Added toggle for the skin
