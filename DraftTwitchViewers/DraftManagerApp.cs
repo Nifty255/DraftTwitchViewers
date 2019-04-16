@@ -506,42 +506,41 @@ namespace DraftTwitchViewers
         {
             if (ScenarioDraftManager.Instance == null)
                 return;
+            if (ScenarioDraftManager.Instance.channel == null)
+            {
+                Log.Error("AppWindow: ScenarioDraftManager.Instance.channel is null");
+                return;
+            }
 
-          
             if (GUI.Button(new Rect(windowRect.width - 20, 2, 18, 18), "x"))
 
             {
                 toolbarControl.SetFalse(true);
                 return;
             }
-
             GUILayout.BeginVertical(ActiveSkin.box);
 
             // Show draft shortcut (Alt+D)
             GUILayout.Label("Quick Draft: Alt+Insert (Toggle " + (UseHotkey ? "off" : "on") + " in Customize)", ActiveSkin.label);
             GUILayout.Label("", ActiveSkin.label);
-        
 
-            if (ScenarioDraftManager.Instance == null)
-                Log.Info("ScenarioDraftManager.Instance is null");
-            if (ScenarioDraftManager.Instance.channel == null)
-                Log.Info("ScenarioDraftManager.Instance.channel is null");
+
             // Channel
             GUILayout.Label("Channel (Lowercase):", ActiveSkin.label);
             ScenarioDraftManager.Instance.channel = GUILayout.TextField(ScenarioDraftManager.Instance.channel, ActiveSkin.textField);
 
             //Spacer Label
             GUILayout.Label("", ActiveSkin.label);
-    
-
+            
             // If career, display the cost of next draft.
             if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
             {
                 GUILayout.Label("Next Draft: -" + (GameVariables.Instance.GetRecruitHireCost(HighLogic.CurrentGame.CrewRoster.GetActiveCrewCount())).ToString("N0") + " Funds", ActiveSkin.label);
             }
 
-            if (PartSelectionManager.Instance.toAdd != null)
+            if (PartSelectionManager.Instance != null && PartSelectionManager.Instance.toAdd != null)
                 GUI.enabled = false;
+
 
             // Draft a Viewer from Twitch, skipping viewers who aren't Pilots.
             if (GUILayout.Button("Draft a Pilot", ActiveSkin.button))
